@@ -8,6 +8,8 @@ our $VERSION = '0.01';
 require XSLoader;
 XSLoader::load('RPi::RTC::DS3231', $VERSION);
 
+use Carp qw(croak);
+
 sub new {
     my ($class) = @_;
     my $self = bless {}, $class;
@@ -50,7 +52,15 @@ sub _fd {
     }
     return $self->{fd};
 }
+sub _as_string {
+    my ($self, $int) = @_;
 
+    if (! defined $int){
+        croak "as_string() requires an integer to check/convert to str\n";
+    }
+
+    return length($int) < 2 ? "0$int" : $int;
+}
 sub __vim {};
 
 1;
