@@ -46,6 +46,14 @@
 #define RTC_AM_PM       0x05
 #define RTC_12_24       0x06
 
+int getSeconds (int fd){
+    return bcd2dec(getRegister(fd, RTC_SEC));
+}
+
+int getMinutes (int fd){
+    return bcd2dec(getRegister(fd, RTC_MIN));
+}
+
 int getHour (int fd){
    
     int hour;
@@ -159,7 +167,11 @@ int _establishI2C (int fd){
     return 0;
 }
 
-#line 163 "DS3231.c"
+void _close (int fd){
+    close(fd);
+}
+
+#line 175 "DS3231.c"
 #ifndef PERL_UNUSED_VAR
 #  define PERL_UNUSED_VAR(var) if (0) var = var
 #endif
@@ -303,7 +315,7 @@ S_croak_xs_usage(const CV *const cv, const char *const params)
 #  define newXS_deffile(a,b) Perl_newXS_deffile(aTHX_ a,b)
 #endif
 
-#line 307 "DS3231.c"
+#line 319 "DS3231.c"
 
 XS_EUPXS(XS_RPi__RTC__DS3231_getHour); /* prototype to pass -Wmissing-prototypes */
 XS_EUPXS(XS_RPi__RTC__DS3231_getHour)
@@ -318,6 +330,44 @@ XS_EUPXS(XS_RPi__RTC__DS3231_getHour)
 	dXSTARG;
 
 	RETVAL = getHour(fd);
+	XSprePUSH; PUSHi((IV)RETVAL);
+    }
+    XSRETURN(1);
+}
+
+
+XS_EUPXS(XS_RPi__RTC__DS3231_getSeconds); /* prototype to pass -Wmissing-prototypes */
+XS_EUPXS(XS_RPi__RTC__DS3231_getSeconds)
+{
+    dVAR; dXSARGS;
+    if (items != 1)
+       croak_xs_usage(cv,  "fd");
+    {
+	int	fd = (int)SvIV(ST(0))
+;
+	int	RETVAL;
+	dXSTARG;
+
+	RETVAL = getSeconds(fd);
+	XSprePUSH; PUSHi((IV)RETVAL);
+    }
+    XSRETURN(1);
+}
+
+
+XS_EUPXS(XS_RPi__RTC__DS3231_getMinutes); /* prototype to pass -Wmissing-prototypes */
+XS_EUPXS(XS_RPi__RTC__DS3231_getMinutes)
+{
+    dVAR; dXSARGS;
+    if (items != 1)
+       croak_xs_usage(cv,  "fd");
+    {
+	int	fd = (int)SvIV(ST(0))
+;
+	int	RETVAL;
+	dXSTARG;
+
+	RETVAL = getMinutes(fd);
 	XSprePUSH; PUSHi((IV)RETVAL);
     }
     XSRETURN(1);
@@ -356,20 +406,18 @@ XS_EUPXS(XS_RPi__RTC__DS3231_disableRegisterBit)
 ;
 	int	bit = (int)SvIV(ST(2))
 ;
-#line 171 "DS3231.xs"
+#line 191 "DS3231.xs"
         I32* temp;
-#line 362 "DS3231.c"
-#line 173 "DS3231.xs"
+#line 412 "DS3231.c"
+#line 193 "DS3231.xs"
         temp = PL_markstack_ptr++;
         disableRegisterBit(fd, reg, bit);
         if (PL_markstack_ptr != temp) {
-          /* truly void, because dXSARGS not invoked */
           PL_markstack_ptr = temp;
-          XSRETURN_EMPTY; /* return empty stack */
+          XSRETURN_EMPTY;
         }
-        /* must have used dXSARGS; list context implied */
-        return; /* assume stack size is correct */
-#line 373 "DS3231.c"
+        return;
+#line 421 "DS3231.c"
 	PUTBACK;
 	return;
     }
@@ -391,20 +439,18 @@ XS_EUPXS(XS_RPi__RTC__DS3231_enableRegisterBit)
 ;
 	int	bit = (int)SvIV(ST(2))
 ;
-#line 189 "DS3231.xs"
+#line 207 "DS3231.xs"
         I32* temp;
-#line 397 "DS3231.c"
-#line 191 "DS3231.xs"
+#line 445 "DS3231.c"
+#line 209 "DS3231.xs"
         temp = PL_markstack_ptr++;
         enableRegisterBit(fd, reg, bit);
         if (PL_markstack_ptr != temp) {
-          /* truly void, because dXSARGS not invoked */
           PL_markstack_ptr = temp;
-          XSRETURN_EMPTY; /* return empty stack */
+          XSRETURN_EMPTY;
         }
-        /* must have used dXSARGS; list context implied */
-        return; /* assume stack size is correct */
-#line 408 "DS3231.c"
+        return;
+#line 454 "DS3231.c"
 	PUTBACK;
 	return;
     }
@@ -561,6 +607,22 @@ XS_EUPXS(XS_RPi__RTC__DS3231__establishI2C)
     XSRETURN(1);
 }
 
+
+XS_EUPXS(XS_RPi__RTC__DS3231__close); /* prototype to pass -Wmissing-prototypes */
+XS_EUPXS(XS_RPi__RTC__DS3231__close)
+{
+    dVAR; dXSARGS;
+    if (items != 1)
+       croak_xs_usage(cv,  "fd");
+    {
+	int	fd = (int)SvIV(ST(0))
+;
+
+	_close(fd);
+    }
+    XSRETURN_EMPTY;
+}
+
 #ifdef __cplusplus
 extern "C"
 #endif
@@ -590,6 +652,8 @@ XS_EXTERNAL(boot_RPi__RTC__DS3231)
 #endif
 
         newXS_deffile("RPi::RTC::DS3231::getHour", XS_RPi__RTC__DS3231_getHour);
+        newXS_deffile("RPi::RTC::DS3231::getSeconds", XS_RPi__RTC__DS3231_getSeconds);
+        newXS_deffile("RPi::RTC::DS3231::getMinutes", XS_RPi__RTC__DS3231_getMinutes);
         newXS_deffile("RPi::RTC::DS3231::getFh", XS_RPi__RTC__DS3231_getFh);
         newXS_deffile("RPi::RTC::DS3231::disableRegisterBit", XS_RPi__RTC__DS3231_disableRegisterBit);
         newXS_deffile("RPi::RTC::DS3231::enableRegisterBit", XS_RPi__RTC__DS3231_enableRegisterBit);
@@ -600,6 +664,7 @@ XS_EXTERNAL(boot_RPi__RTC__DS3231)
         newXS_deffile("RPi::RTC::DS3231::bcd2dec", XS_RPi__RTC__DS3231_bcd2dec);
         newXS_deffile("RPi::RTC::DS3231::dec2bcd", XS_RPi__RTC__DS3231_dec2bcd);
         newXS_deffile("RPi::RTC::DS3231::_establishI2C", XS_RPi__RTC__DS3231__establishI2C);
+        newXS_deffile("RPi::RTC::DS3231::_close", XS_RPi__RTC__DS3231__close);
 #if PERL_VERSION_LE(5, 21, 5)
 #  if PERL_VERSION_GE(5, 9, 0)
     if (PL_unitcheckav)

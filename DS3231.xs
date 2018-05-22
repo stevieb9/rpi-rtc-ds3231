@@ -37,6 +37,14 @@
 #define RTC_AM_PM       0x05
 #define RTC_12_24       0x06
 
+int getSeconds (int fd){
+    return bcd2dec(getRegister(fd, RTC_SEC));
+}
+
+int getMinutes (int fd){
+    return bcd2dec(getRegister(fd, RTC_MIN));
+}
+
 int getHour (int fd){
    
     int hour;
@@ -150,6 +158,10 @@ int _establishI2C (int fd){
     return 0;
 }
 
+void _close (int fd){
+    close(fd);
+}
+
 MODULE = RPi::RTC::DS3231  PACKAGE = RPi::RTC::DS3231
 
 PROTOTYPES: DISABLE
@@ -158,6 +170,14 @@ PROTOTYPES: DISABLE
 int
 getHour (fd)
 	int	fd
+
+int
+getSeconds (fd)
+    int fd
+
+int
+getMinutes (fd)
+    int fd
 
 int
 getFh ()
@@ -173,12 +193,10 @@ disableRegisterBit (fd, reg, bit)
         temp = PL_markstack_ptr++;
         disableRegisterBit(fd, reg, bit);
         if (PL_markstack_ptr != temp) {
-          /* truly void, because dXSARGS not invoked */
           PL_markstack_ptr = temp;
-          XSRETURN_EMPTY; /* return empty stack */
+          XSRETURN_EMPTY;
         }
-        /* must have used dXSARGS; list context implied */
-        return; /* assume stack size is correct */
+        return;
 
 void
 enableRegisterBit (fd, reg, bit)
@@ -191,12 +209,10 @@ enableRegisterBit (fd, reg, bit)
         temp = PL_markstack_ptr++;
         enableRegisterBit(fd, reg, bit);
         if (PL_markstack_ptr != temp) {
-          /* truly void, because dXSARGS not invoked */
           PL_markstack_ptr = temp;
-          XSRETURN_EMPTY; /* return empty stack */
+          XSRETURN_EMPTY;
         }
-        /* must have used dXSARGS; list context implied */
-        return; /* assume stack size is correct */
+        return;
 
 int
 getRegister (fd, reg)
@@ -235,3 +251,6 @@ int
 _establishI2C (fd)
 	int	fd
 
+void
+_close (fd)
+    int fd
