@@ -143,20 +143,17 @@ int setMilitary (int fd, int value){
         return 0;
     }
 
-    printf("Changing 12/24 hour clock\n");
-    printf("mil: %d, val: %d\n", militaryTime, value);
-
     if (value == 1){
         // enable 12 hr clock
 
         if (getHour(fd) <= 12){
-            printf("enabling 12 hr clock AM\n");
+            // AM
             setHour(fd, getHour(fd));
             enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
             disableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
         }
         else {
-            printf("enabling 12 hr clock PM\n");
+            // PM
             setHour(fd, getHour(fd) - 12);
             enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
             enableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
@@ -164,7 +161,6 @@ int setMilitary (int fd, int value){
     }
     else {
         // enable 24 hr clock
-        printf("enabling 24 hr clock\n");
 
         int meridien = getMeridien(fd);
 
