@@ -61,6 +61,22 @@ int getHour (int fd){
     return bcd2dec(hour);
 }
 
+int setHour (int fd, int value){
+
+    if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) != 0){
+        // 12 hour clock
+
+        if (value > 12){
+            croak(
+                "hour (%d) is out of bounds when in 12-hour clock mode\n",
+                value
+            )
+
+
+        }
+    }
+}
+
 int getFh (){
 
     int fd;
@@ -132,7 +148,34 @@ int setRegister(int fd, int reg, int value, char* name){
     char buf[2] = {reg, value};
     if ((write(fd, buf, sizeof(buf))) != 2){
         close(fd);
-        croak("Could not write the %s: %s\n", name, strerror(errno));
+        croak(
+            "Could not write to the %s register: %s\n",
+            name,
+            strerror(errno)
+        );
+    }
+
+    return 0;
+}
+
+int setRegisterBits(int fd, int reg, int lsb, int nbits, int value, char* name){
+
+    int data = getRegister(fd, reg);
+
+    printf("data before: %d\n", data);
+
+    data = bitSet(data, lsb, nbits, value);
+
+    printf("data after: %d\n", data);
+
+    int buf[2] = {reg, data};
+
+    if ((write(fd, buf, sizeof(buf))) != 2){
+        croak(
+            "Could not write to the %s register: %s\n",
+            name,
+            strerror(errno)
+        );
     }
 
     return 0;
@@ -234,7 +277,15 @@ setRegister (fd, reg, value, name)
 	int	fd
 	int	reg
 	int	value
-	char *	name
+	char*	name
+
+int
+setRegisterBits(int fd, int reg, int lsb, int nbits, int value, char* name)
+    int fd
+    int reg
+    int lsb
+    int value
+    char* name
 
 int
 bcd2dec (num)
