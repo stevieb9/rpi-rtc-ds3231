@@ -219,6 +219,10 @@ int
 getMinutes (fd)
     int fd
 
+int setHour (fd, value)
+    int fd
+    int value
+
 int
 getFh ()
 
@@ -280,7 +284,7 @@ setRegister (fd, reg, value, name)
 	char*	name
 
 int
-setRegisterBits(int fd, int reg, int lsb, int nbits, int value, char* name)
+setRegisterBits(fd, reg, lsb, nbits, value, name)
     int fd
     int reg
     int lsb
