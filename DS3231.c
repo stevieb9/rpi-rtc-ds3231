@@ -54,6 +54,10 @@ int getMinutes (int fd){
     return bcd2dec(getRegister(fd, RTC_MIN));
 }
 
+int setMinutes (int fd, int value){
+    setRegister(fd, RTC_MIN, dec2bcd(value), "minutes");
+}
+
 int getHour (int fd){
    
     int hour;
@@ -135,6 +139,74 @@ int setMeridien (int fd, int value){
     return 0;
 }
 
+int getMilitary (int fd){
+    return getRegisterBit(fd, RTC_HOUR, RTC_12_24);
+}
+
+int setMilitary (int fd, int value){
+
+    int militaryTime = getMilitary(fd);
+
+    if (militaryTime == value){
+        // nothing to do
+        return 0;
+    }
+
+    printf("Changing 12/24 hour clock\n");
+    printf("mil: %d, val: %d\n", militaryTime, value);
+
+    if (value == 1){
+        // enable 12 hr clock
+
+        if (getHour(fd) <= 12){
+            printf("enabling 12 hr clock AM\n");
+            setHour(fd, getHour(fd));
+            enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+            disableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
+        }
+        else {
+            printf("enabling 12 hr clock PM\n");
+            setHour(fd, getHour(fd) - 12);
+            enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+            enableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
+        }
+    }
+    else {
+        // enable 24 hr clock
+        printf("enabling 24 hr clock\n");
+
+        int meridien = getMeridien(fd);
+
+        if (meridien == 0){
+            // AM
+
+            int hr = getHour(fd);
+
+            if (hr == 12){
+                disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+                setHour(fd, 0);
+            }
+            else {
+                disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+                setHour(fd, hr);
+            }
+        }
+        else {
+            // PM
+
+            int hr = getHour(fd);
+            if (hr < 12){
+                disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+                setHour(fd, hr + 12);
+            }
+            else {
+                disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+                setHour(fd, hr);
+            }
+        }
+    }
+}
+
 int getFh (){
 
     int fd;
@@ -172,15 +244,6 @@ int getRegister (int fd, int reg){
 
     char buf[1];
     buf[0] = reg;
-
-    if (write(fd, buf, 1) != 1){
-        close(fd);
-		croak(
-		    "Couldn't set the register address %d: %s\n",
-		    reg,
-		    strerror(errno)
-        );
-    }
 
     if ((write(fd, buf, 1)) != 1){
         close(fd);
@@ -238,7 +301,7 @@ int setRegisterBits(int fd, int reg, int lsb, int nbits, int value, char* name){
 
     data = bitSet(data, lsb, nbits, value);
 
-    int buf[2] = {reg, data};
+    char buf[2] = {reg, data};
 
     if ((write(fd, buf, sizeof(buf))) != 2){
         croak(
@@ -273,7 +336,7 @@ void _close (int fd){
     close(fd);
 }
 
-#line 277 "DS3231.c"
+#line 340 "DS3231.c"
 #ifndef PERL_UNUSED_VAR
 #  define PERL_UNUSED_VAR(var) if (0) var = var
 #endif
@@ -417,7 +480,89 @@ S_croak_xs_usage(const CV *const cv, const char *const params)
 #  define newXS_deffile(a,b) Perl_newXS_deffile(aTHX_ a,b)
 #endif
 
-#line 421 "DS3231.c"
+#line 484 "DS3231.c"
+
+XS_EUPXS(XS_RPi__RTC__DS3231_setMinutes); /* prototype to pass -Wmissing-prototypes */
+XS_EUPXS(XS_RPi__RTC__DS3231_setMinutes)
+{
+    dVAR; dXSARGS;
+    if (items != 2)
+       croak_xs_usage(cv,  "fd, value");
+    {
+	int	fd = (int)SvIV(ST(0))
+;
+	int	value = (int)SvIV(ST(1))
+;
+	int	RETVAL;
+	dXSTARG;
+
+	RETVAL = setMinutes(fd, value);
+	XSprePUSH; PUSHi((IV)RETVAL);
+    }
+    XSRETURN(1);
+}
+
+
+XS_EUPXS(XS_RPi__RTC__DS3231_setMilitary); /* prototype to pass -Wmissing-prototypes */
+XS_EUPXS(XS_RPi__RTC__DS3231_setMilitary)
+{
+    dVAR; dXSARGS;
+    if (items != 2)
+       croak_xs_usage(cv,  "fd, value");
+    {
+	int	fd = (int)SvIV(ST(0))
+;
+	int	value = (int)SvIV(ST(1))
+;
+	int	RETVAL;
+	dXSTARG;
+
+	RETVAL = setMilitary(fd, value);
+	XSprePUSH; PUSHi((IV)RETVAL);
+    }
+    XSRETURN(1);
+}
+
+
+XS_EUPXS(XS_RPi__RTC__DS3231_getMilitary); /* prototype to pass -Wmissing-prototypes */
+XS_EUPXS(XS_RPi__RTC__DS3231_getMilitary)
+{
+    dVAR; dXSARGS;
+    if (items != 1)
+       croak_xs_usage(cv,  "fd");
+    {
+	int	fd = (int)SvIV(ST(0))
+;
+	int	RETVAL;
+	dXSTARG;
+
+	RETVAL = getMilitary(fd);
+	XSprePUSH; PUSHi((IV)RETVAL);
+    }
+    XSRETURN(1);
+}
+
+
+XS_EUPXS(XS_RPi__RTC__DS3231_setMeridien); /* prototype to pass -Wmissing-prototypes */
+XS_EUPXS(XS_RPi__RTC__DS3231_setMeridien)
+{
+    dVAR; dXSARGS;
+    if (items != 2)
+       croak_xs_usage(cv,  "fd, value");
+    {
+	int	fd = (int)SvIV(ST(0))
+;
+	int	value = (int)SvIV(ST(1))
+;
+	int	RETVAL;
+	dXSTARG;
+
+	RETVAL = setMeridien(fd, value);
+	XSprePUSH; PUSHi((IV)RETVAL);
+    }
+    XSRETURN(1);
+}
+
 
 XS_EUPXS(XS_RPi__RTC__DS3231_getMeridien); /* prototype to pass -Wmissing-prototypes */
 XS_EUPXS(XS_RPi__RTC__DS3231_getMeridien)
@@ -516,27 +661,6 @@ XS_EUPXS(XS_RPi__RTC__DS3231_setHour)
 }
 
 
-XS_EUPXS(XS_RPi__RTC__DS3231_setMeridien); /* prototype to pass -Wmissing-prototypes */
-XS_EUPXS(XS_RPi__RTC__DS3231_setMeridien)
-{
-    dVAR; dXSARGS;
-    if (items != 2)
-       croak_xs_usage(cv,  "fd, value");
-    {
-	int	fd = (int)SvIV(ST(0))
-;
-	int	value = (int)SvIV(ST(1))
-;
-	int	RETVAL;
-	dXSTARG;
-
-	RETVAL = setMeridien(fd, value);
-	XSprePUSH; PUSHi((IV)RETVAL);
-    }
-    XSRETURN(1);
-}
-
-
 XS_EUPXS(XS_RPi__RTC__DS3231_getFh); /* prototype to pass -Wmissing-prototypes */
 XS_EUPXS(XS_RPi__RTC__DS3231_getFh)
 {
@@ -569,10 +693,10 @@ XS_EUPXS(XS_RPi__RTC__DS3231_disableRegisterBit)
 ;
 	int	bit = (int)SvIV(ST(2))
 ;
-#line 304 "DS3231.xs"
+#line 379 "DS3231.xs"
         I32* temp;
-#line 575 "DS3231.c"
-#line 306 "DS3231.xs"
+#line 699 "DS3231.c"
+#line 381 "DS3231.xs"
         temp = PL_markstack_ptr++;
         disableRegisterBit(fd, reg, bit);
         if (PL_markstack_ptr != temp) {
@@ -580,7 +704,7 @@ XS_EUPXS(XS_RPi__RTC__DS3231_disableRegisterBit)
           XSRETURN_EMPTY;
         }
         return;
-#line 584 "DS3231.c"
+#line 708 "DS3231.c"
 	PUTBACK;
 	return;
     }
@@ -602,10 +726,10 @@ XS_EUPXS(XS_RPi__RTC__DS3231_enableRegisterBit)
 ;
 	int	bit = (int)SvIV(ST(2))
 ;
-#line 320 "DS3231.xs"
+#line 395 "DS3231.xs"
         I32* temp;
-#line 608 "DS3231.c"
-#line 322 "DS3231.xs"
+#line 732 "DS3231.c"
+#line 397 "DS3231.xs"
         temp = PL_markstack_ptr++;
         enableRegisterBit(fd, reg, bit);
         if (PL_markstack_ptr != temp) {
@@ -613,7 +737,7 @@ XS_EUPXS(XS_RPi__RTC__DS3231_enableRegisterBit)
           XSRETURN_EMPTY;
         }
         return;
-#line 617 "DS3231.c"
+#line 741 "DS3231.c"
 	PUTBACK;
 	return;
     }
@@ -840,12 +964,15 @@ XS_EXTERNAL(boot_RPi__RTC__DS3231)
 #  endif
 #endif
 
+        newXS_deffile("RPi::RTC::DS3231::setMinutes", XS_RPi__RTC__DS3231_setMinutes);
+        newXS_deffile("RPi::RTC::DS3231::setMilitary", XS_RPi__RTC__DS3231_setMilitary);
+        newXS_deffile("RPi::RTC::DS3231::getMilitary", XS_RPi__RTC__DS3231_getMilitary);
+        newXS_deffile("RPi::RTC::DS3231::setMeridien", XS_RPi__RTC__DS3231_setMeridien);
         newXS_deffile("RPi::RTC::DS3231::getMeridien", XS_RPi__RTC__DS3231_getMeridien);
         newXS_deffile("RPi::RTC::DS3231::getHour", XS_RPi__RTC__DS3231_getHour);
         newXS_deffile("RPi::RTC::DS3231::getSeconds", XS_RPi__RTC__DS3231_getSeconds);
         newXS_deffile("RPi::RTC::DS3231::getMinutes", XS_RPi__RTC__DS3231_getMinutes);
         newXS_deffile("RPi::RTC::DS3231::setHour", XS_RPi__RTC__DS3231_setHour);
-        newXS_deffile("RPi::RTC::DS3231::setMeridien", XS_RPi__RTC__DS3231_setMeridien);
         newXS_deffile("RPi::RTC::DS3231::getFh", XS_RPi__RTC__DS3231_getFh);
         newXS_deffile("RPi::RTC::DS3231::disableRegisterBit", XS_RPi__RTC__DS3231_disableRegisterBit);
         newXS_deffile("RPi::RTC::DS3231::enableRegisterBit", XS_RPi__RTC__DS3231_enableRegisterBit);

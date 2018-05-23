@@ -207,7 +207,7 @@ int main (void){
 
     int fd = getFh();
 
-//    setRegister(fd, RTC_HOUR, 23, "hour");
+    setRegister(fd, dec2bcd(RTC_MIN), 59, "min");
 //    setRegisterBits(fd, RTC_HOUR, 0, 4, 23, "test");
 //    disableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
 //    disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
@@ -219,6 +219,7 @@ int main (void){
 
     printf("elem %d: %d\n", 0, bcd2dec(getRegister(fd, RTC_SEC)));
     printf("elem %d: %d\n", 1, bcd2dec(getRegister(fd, RTC_MIN)));
+    printf("elem %d: %d\n", 1, getRegister(fd, RTC_MIN));
     printf("elem %d: %d\n", 2, bcd2dec(getRegister(fd, RTC_HOUR)));
     printf("elem %d: %d\n", 3, bcd2dec(getRegister(fd, RTC_WDAY)));
     printf("elem %d: %d\n", 4, bcd2dec(getRegister(fd, RTC_MDAY)));

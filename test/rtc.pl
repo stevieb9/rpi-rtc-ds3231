@@ -7,16 +7,28 @@ use RPi::RTC::DS3231;
 
 my $rtc = RPi::RTC::DS3231->new;
 
+#hour(13);
+military(0);
+
+sub hour {$rtc->hour(shift)}
+sub military {$rtc->military_clock(shift)}
+
+my $meridien;
+
+if ($rtc->military_clock){
+    $meridien = $rtc->am_pm ? 'PM' : 'AM';
+}
+
 my $h = $rtc->hour;
 my $m = $rtc->min;
 my $s = $rtc->sec;
 
-say "$h:$m:$s";
-
-say "meridien: " . $rtc->am_pm;
-say "meridien: " . $rtc->am_pm(1);
-
-#say $rtc->hour(11);
+if (defined $meridien){
+    say "$h:$m:$s $meridien";
+}
+else {
+    say "$h:$m:$s";
+}
 
 # not done
 

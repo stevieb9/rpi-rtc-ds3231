@@ -28,6 +28,15 @@ sub am_pm {
     }
     return getMeridien($self->_fd);
 }
+sub military_clock {
+    my ($self, $value) = @_;
+
+    if (defined $value){
+        print "defined!\n";
+        setMilitary($self->_fd, $value);
+    }
+    return getMilitary($self->_fd);
+}
 sub hour {
     my ($self, $hour) = @_;
 
@@ -39,8 +48,9 @@ sub hour {
 sub min {
     my ($self, $min) = @_;
 
-    #FIXME: set minutes if set
-
+    if (defined $min){
+        setMinutes($self->_fd, $min);
+    }
     return getMinutes($self->_fd);
 }
 sub sec {

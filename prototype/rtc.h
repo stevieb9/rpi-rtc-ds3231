@@ -2,7 +2,7 @@
 #define _RTC_H_
 #endif
 
-void  _establishI2C (int fd);
+int  _establishI2C (int fd);
 int getHour (int fd);
 int setHour (int fd, int value);
 int getFh ();

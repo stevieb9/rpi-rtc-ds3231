@@ -45,6 +45,10 @@ int getMinutes (int fd){
     return bcd2dec(getRegister(fd, RTC_MIN));
 }
 
+int setMinutes (int fd, int value){
+    setRegister(fd, RTC_MIN, dec2bcd(value), "minutes");
+}
+
 int getHour (int fd){
    
     int hour;
@@ -126,6 +130,74 @@ int setMeridien (int fd, int value){
     return 0;
 }
 
+int getMilitary (int fd){
+    return getRegisterBit(fd, RTC_HOUR, RTC_12_24);
+}
+
+int setMilitary (int fd, int value){
+
+    int militaryTime = getMilitary(fd);
+
+    if (militaryTime == value){
+        // nothing to do
+        return 0;
+    }
+
+    printf("Changing 12/24 hour clock\n");
+    printf("mil: %d, val: %d\n", militaryTime, value);
+
+    if (value == 1){
+        // enable 12 hr clock
+
+        if (getHour(fd) <= 12){
+            printf("enabling 12 hr clock AM\n");
+            setHour(fd, getHour(fd));
+            enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+            disableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
+        }
+        else {
+            printf("enabling 12 hr clock PM\n");
+            setHour(fd, getHour(fd) - 12);
+            enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+            enableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
+        }
+    }
+    else {
+        // enable 24 hr clock
+        printf("enabling 24 hr clock\n");
+
+        int meridien = getMeridien(fd);
+
+        if (meridien == 0){
+            // AM
+
+            int hr = getHour(fd);
+
+            if (hr == 12){
+                disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+                setHour(fd, 0);
+            }
+            else {
+                disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+                setHour(fd, hr);
+            }
+        }
+        else {
+            // PM
+
+            int hr = getHour(fd);
+            if (hr < 12){
+                disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+                setHour(fd, hr + 12);
+            }
+            else {
+                disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+                setHour(fd, hr);
+            }
+        }
+    }
+}
+
 int getFh (){
 
     int fd;
@@ -163,15 +235,6 @@ int getRegister (int fd, int reg){
 
     char buf[1];
     buf[0] = reg;
-
-    if (write(fd, buf, 1) != 1){
-        close(fd);
-		croak(
-		    "Couldn't set the register address %d: %s\n",
-		    reg,
-		    strerror(errno)
-        );
-    }
 
     if ((write(fd, buf, 1)) != 1){
         close(fd);
@@ -229,7 +292,7 @@ int setRegisterBits(int fd, int reg, int lsb, int nbits, int value, char* name){
 
     data = bitSet(data, lsb, nbits, value);
 
-    int buf[2] = {reg, data};
+    char buf[2] = {reg, data};
 
     if ((write(fd, buf, sizeof(buf))) != 2){
         croak(
@@ -268,6 +331,22 @@ MODULE = RPi::RTC::DS3231  PACKAGE = RPi::RTC::DS3231
 
 PROTOTYPES: DISABLE
 
+int setMinutes (fd, value)
+    int fd
+    int value
+
+int setMilitary (fd, value)
+    int fd
+    int value
+
+int getMilitary (fd)
+    int fd
+
+int
+setMeridien (fd, value)
+    int fd
+    int value
+
 int
 getMeridien (fd)
     int fd
@@ -285,10 +364,6 @@ getMinutes (fd)
     int fd
 
 int setHour (fd, value)
-    int fd
-    int value
-
-int setMeridien (fd, value)
     int fd
     int value
 
