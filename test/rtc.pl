@@ -13,7 +13,7 @@ my $s = $rtc->sec;
 
 say "$h:$m:$s";
 
-say $rtc->as_string(1);
-say $rtc->as_string(22);
+#say $rtc->as_string(1);
+#say $rtc->as_string(22);
 
 $rtc->_close;

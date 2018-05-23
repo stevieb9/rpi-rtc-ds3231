@@ -2,7 +2,7 @@
 #define _RTC_H_
 #endif
 
-int  _establishI2C (int fd);
+void  _establishI2C (int fd);
 int getHour (int fd);
 int getFh ();
 void disableRegisterBit (int fd, int reg, int bit);

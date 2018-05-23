@@ -66,19 +66,20 @@ int getFh (){
     int fd;
 
     if ((fd = open("/dev/i2c-1", O_RDWR)) < 0) {
-        printf("Couldn't open the device: %s\n", strerror(errno));
-        // croak here
-		return -1;
+        close(fd);
+        croak("Couldn't open the device: %s\n", strerror(errno));
 	}
 
 	if (ioctl(fd, I2C_SLAVE_FORCE, RTC_ADDR) < 0) {
-        printf("Couldn't find device at addr %d: %s\n", RTC_ADDR, strerror(errno));
         close(fd);
-        // croak here
-		return -1;
-	}  
+        croak(
+            "Couldn't find device at addr %d: %s\n",
+            RTC_ADDR,
+            strerror(errno)
+        );
+	}
 
-    int established = _establishI2C(fd);
+    _establishI2C(fd);
 
     return fd;
 }
@@ -145,17 +146,14 @@ int dec2bcd(int num){
    return((num/10) * 16 + (num%10));
 }
 
-int _establishI2C (int fd){
+void _establishI2C (int fd){
 
     int buf[1] = { 0x00 };
 
     if (write(fd, buf, 1) != 1){
         close(fd);
 		croak("Error: Received no ACK-Bit, couldn't established connection!");
-        return -1;
     }
-
-    return 0;
 }
 
 void _close (int fd){
@@ -165,7 +163,6 @@ void _close (int fd){
 MODULE = RPi::RTC::DS3231  PACKAGE = RPi::RTC::DS3231
 
 PROTOTYPES: DISABLE
-
 
 int
 getHour (fd)
@@ -247,7 +244,7 @@ int
 dec2bcd (num)
 	int	num
 
-int
+void
 _establishI2C (fd)
 	int	fd
 
