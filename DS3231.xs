@@ -66,14 +66,29 @@ int setHour (int fd, int value){
     if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) != 0){
         // 12 hour clock
 
-        if (value > 12){
+        if (value > 12 || value < 1){
             croak(
                 "hour (%d) is out of bounds when in 12-hour clock mode\n",
                 value
-            )
-
-
+            );
         }
+
+        setRegisterBits(fd, RTC_HOUR, 0, 4, value, "hour");
+        return 0;
+    }
+    else {
+        // 24 hour clock
+
+        if (value > 23 || value < 0){
+            croak(
+                "hour (%d) is out of bounds when in 24-hour clock mode\n",
+                value
+            );
+        }
+
+        value = dec2bcd(value);
+        setRegister(fd, RTC_HOUR, value, "hour");
+        return 0;
     }
 }
 
@@ -114,8 +129,15 @@ int getRegister (int fd, int reg){
 
     char buf[1];
     buf[0] = reg;
-    
-    // set the register pointer
+
+    if (write(fd, buf, 1) != 1){
+        close(fd);
+		croak(
+		    "Couldn't set the register address %d: %s\n",
+		    reg,
+		    strerror(errno)
+        );
+    }
 
     if ((write(fd, buf, 1)) != 1){
         close(fd);
@@ -144,8 +166,13 @@ int getRegisterBits (int fd, int reg, int msb, int lsb){
 }
 
 int setRegister(int fd, int reg, int value, char* name){
+    /*
+        always call dec2bcd(value) before sending
+        in the value to this function
+    */
 
     char buf[2] = {reg, value};
+
     if ((write(fd, buf, sizeof(buf))) != 2){
         close(fd);
         croak(
@@ -159,14 +186,14 @@ int setRegister(int fd, int reg, int value, char* name){
 }
 
 int setRegisterBits(int fd, int reg, int lsb, int nbits, int value, char* name){
+    /*
+        never call dec2bcd(value) before sending
+        in the value to this function
+    */
 
     int data = getRegister(fd, reg);
 
-    printf("data before: %d\n", data);
-
     data = bitSet(data, lsb, nbits, value);
-
-    printf("data after: %d\n", data);
 
     int buf[2] = {reg, data};
 
@@ -288,6 +315,7 @@ setRegisterBits(fd, reg, lsb, nbits, value, name)
     int fd
     int reg
     int lsb
+    int nbits
     int value
     char* name
 

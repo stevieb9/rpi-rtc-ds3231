@@ -45,10 +45,44 @@ int getHour (int fd){
     else {
         // 12 hr clock
         printf("12 hour\n");
-        hour = getRegisterBits(fd, RTC_HOUR, 4, 0);
+        hour = getRegisterBits(fd, RTC_HOUR, 3, 0);
     }
 
+    printf("%d\n", bitGet(255, 0, 0));
     return bcd2dec(hour);
+}
+
+int setHour (int fd, int value){
+
+    if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) != 0){
+        // 12 hour clock
+
+        if (value > 12 || value < 1){
+            printf(
+                "hour (%d) is out of bounds when in 12-hour clock mode\n",
+                value
+            );
+            exit(-1);
+        }
+
+        setRegisterBits(fd, RTC_HOUR, 0, 4, value, "hour");
+        return 0;
+    }
+    else {
+        // 24 hour clock
+
+        if (value > 23 || value < 0){
+            printf(
+                "hour (%d) is out of bounds when in 24-hour clock mode\n",
+                value
+            );
+            exit(-1);
+        }
+
+        value = dec2bcd(value);
+        setRegister(fd, RTC_HOUR, value, "hour");
+        return 0;
+    }
 }
 
 int getFh (){
@@ -110,6 +144,10 @@ int getRegisterBits (int fd, int reg, int msb, int lsb){
 }
 
 int setRegister(int fd, int reg, int value, char* name){
+    /*
+        always call dec2bcd(value) before sending
+        in the value to this function
+    */
 
     char buf[2] = {reg, value};
 
@@ -123,16 +161,16 @@ int setRegister(int fd, int reg, int value, char* name){
 }
 
 int setRegisterBits(int fd, int reg, int lsb, int nbits, int value, char* name){
+    /*
+        never call dec2bcd(value) before sending
+        in the value to this function
+    */
 
     int data = getRegister(fd, reg);
 
-    printf("data before: %d\n", data);
-
     data = bitSet(data, lsb, nbits, value);
 
-    printf("data after: %d\n", data);
-
-    int buf[2] = {reg, data};
+    char buf[2] = {reg, data};
 
     if ((write(fd, buf, sizeof(buf))) != 2){
         printf("Could not write the %s: %s\n", name, strerror(errno));
@@ -169,12 +207,15 @@ int main (void){
 
     int fd = getFh();
 
-    setRegisterBits(fd, RTC_HOUR, 0, 4, 12, "hour");
+//    setRegister(fd, RTC_HOUR, 23, "hour");
+//    setRegisterBits(fd, RTC_HOUR, 0, 4, 23, "test");
 //    disableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
-//    setRegister(fd, RTC_HOUR, 3, "hour");
+//    disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
 
-//    enableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
-//    enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+    enableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
+    enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+
+    setHour(fd, 12);
 
     printf("elem %d: %d\n", 0, bcd2dec(getRegister(fd, RTC_SEC)));
     printf("elem %d: %d\n", 1, bcd2dec(getRegister(fd, RTC_MIN)));

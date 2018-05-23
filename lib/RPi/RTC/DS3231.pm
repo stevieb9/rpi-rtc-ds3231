@@ -23,11 +23,9 @@ sub close {
 sub hour {
     my ($self, $hour) = @_;
 
-    # check for 12/24 hour mode and barf if user
-    # is trying to set a 24 hr clock in 12 hr mode
-
-    #FIXME: add set hour routine here
-
+    if (defined $hour){
+        setHour($self->_fd, $hour);
+    }
     return getHour($self->_fd);
 }
 sub min {

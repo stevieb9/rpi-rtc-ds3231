@@ -70,24 +70,56 @@ int getHour (int fd){
     return bcd2dec(hour);
 }
 
+int setHour (int fd, int value){
+
+    if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) != 0){
+        // 12 hour clock
+
+        if (value > 12 || value < 1){
+            croak(
+                "hour (%d) is out of bounds when in 12-hour clock mode\n",
+                value
+            );
+        }
+
+        setRegisterBits(fd, RTC_HOUR, 0, 4, value, "hour");
+        return 0;
+    }
+    else {
+        // 24 hour clock
+
+        if (value > 23 || value < 0){
+            croak(
+                "hour (%d) is out of bounds when in 24-hour clock mode\n",
+                value
+            );
+        }
+
+        value = dec2bcd(value);
+        setRegister(fd, RTC_HOUR, value, "hour");
+        return 0;
+    }
+}
+
 int getFh (){
 
     int fd;
 
     if ((fd = open("/dev/i2c-1", O_RDWR)) < 0) {
-        printf("Couldn't open the device: %s\n", strerror(errno));
-        // croak here
-		return -1;
+        close(fd);
+        croak("Couldn't open the device: %s\n", strerror(errno));
 	}
 
 	if (ioctl(fd, I2C_SLAVE_FORCE, RTC_ADDR) < 0) {
-        printf("Couldn't find device at addr %d: %s\n", RTC_ADDR, strerror(errno));
         close(fd);
-        // croak here
-		return -1;
-	}  
+        croak(
+            "Couldn't find device at addr %d: %s\n",
+            RTC_ADDR,
+            strerror(errno)
+        );
+	}
 
-    int established = _establishI2C(fd);
+    _establishI2C(fd);
 
     return fd;
 }
@@ -106,8 +138,15 @@ int getRegister (int fd, int reg){
 
     char buf[1];
     buf[0] = reg;
-    
-    // set the register pointer
+
+    if (write(fd, buf, 1) != 1){
+        close(fd);
+		croak(
+		    "Couldn't set the register address %d: %s\n",
+		    reg,
+		    strerror(errno)
+        );
+    }
 
     if ((write(fd, buf, 1)) != 1){
         close(fd);
@@ -136,11 +175,43 @@ int getRegisterBits (int fd, int reg, int msb, int lsb){
 }
 
 int setRegister(int fd, int reg, int value, char* name){
+    /*
+        always call dec2bcd(value) before sending
+        in the value to this function
+    */
 
     char buf[2] = {reg, value};
+
     if ((write(fd, buf, sizeof(buf))) != 2){
         close(fd);
-        croak("Could not write the %s: %s\n", name, strerror(errno));
+        croak(
+            "Could not write to the %s register: %s\n",
+            name,
+            strerror(errno)
+        );
+    }
+
+    return 0;
+}
+
+int setRegisterBits(int fd, int reg, int lsb, int nbits, int value, char* name){
+    /*
+        never call dec2bcd(value) before sending
+        in the value to this function
+    */
+
+    int data = getRegister(fd, reg);
+
+    data = bitSet(data, lsb, nbits, value);
+
+    int buf[2] = {reg, data};
+
+    if ((write(fd, buf, sizeof(buf))) != 2){
+        croak(
+            "Could not write to the %s register: %s\n",
+            name,
+            strerror(errno)
+        );
     }
 
     return 0;
@@ -154,24 +225,21 @@ int dec2bcd(int num){
    return((num/10) * 16 + (num%10));
 }
 
-int _establishI2C (int fd){
+void _establishI2C (int fd){
 
     int buf[1] = { 0x00 };
 
     if (write(fd, buf, 1) != 1){
         close(fd);
 		croak("Error: Received no ACK-Bit, couldn't established connection!");
-        return -1;
     }
-
-    return 0;
 }
 
 void _close (int fd){
     close(fd);
 }
 
-#line 175 "DS3231.c"
+#line 243 "DS3231.c"
 #ifndef PERL_UNUSED_VAR
 #  define PERL_UNUSED_VAR(var) if (0) var = var
 #endif
@@ -315,7 +383,7 @@ S_croak_xs_usage(const CV *const cv, const char *const params)
 #  define newXS_deffile(a,b) Perl_newXS_deffile(aTHX_ a,b)
 #endif
 
-#line 319 "DS3231.c"
+#line 387 "DS3231.c"
 
 XS_EUPXS(XS_RPi__RTC__DS3231_getHour); /* prototype to pass -Wmissing-prototypes */
 XS_EUPXS(XS_RPi__RTC__DS3231_getHour)
@@ -374,6 +442,27 @@ XS_EUPXS(XS_RPi__RTC__DS3231_getMinutes)
 }
 
 
+XS_EUPXS(XS_RPi__RTC__DS3231_setHour); /* prototype to pass -Wmissing-prototypes */
+XS_EUPXS(XS_RPi__RTC__DS3231_setHour)
+{
+    dVAR; dXSARGS;
+    if (items != 2)
+       croak_xs_usage(cv,  "fd, value");
+    {
+	int	fd = (int)SvIV(ST(0))
+;
+	int	value = (int)SvIV(ST(1))
+;
+	int	RETVAL;
+	dXSTARG;
+
+	RETVAL = setHour(fd, value);
+	XSprePUSH; PUSHi((IV)RETVAL);
+    }
+    XSRETURN(1);
+}
+
+
 XS_EUPXS(XS_RPi__RTC__DS3231_getFh); /* prototype to pass -Wmissing-prototypes */
 XS_EUPXS(XS_RPi__RTC__DS3231_getFh)
 {
@@ -406,10 +495,10 @@ XS_EUPXS(XS_RPi__RTC__DS3231_disableRegisterBit)
 ;
 	int	bit = (int)SvIV(ST(2))
 ;
-#line 191 "DS3231.xs"
+#line 262 "DS3231.xs"
         I32* temp;
-#line 412 "DS3231.c"
-#line 193 "DS3231.xs"
+#line 501 "DS3231.c"
+#line 264 "DS3231.xs"
         temp = PL_markstack_ptr++;
         disableRegisterBit(fd, reg, bit);
         if (PL_markstack_ptr != temp) {
@@ -417,7 +506,7 @@ XS_EUPXS(XS_RPi__RTC__DS3231_disableRegisterBit)
           XSRETURN_EMPTY;
         }
         return;
-#line 421 "DS3231.c"
+#line 510 "DS3231.c"
 	PUTBACK;
 	return;
     }
@@ -439,10 +528,10 @@ XS_EUPXS(XS_RPi__RTC__DS3231_enableRegisterBit)
 ;
 	int	bit = (int)SvIV(ST(2))
 ;
-#line 207 "DS3231.xs"
+#line 278 "DS3231.xs"
         I32* temp;
-#line 445 "DS3231.c"
-#line 209 "DS3231.xs"
+#line 534 "DS3231.c"
+#line 280 "DS3231.xs"
         temp = PL_markstack_ptr++;
         enableRegisterBit(fd, reg, bit);
         if (PL_markstack_ptr != temp) {
@@ -450,7 +539,7 @@ XS_EUPXS(XS_RPi__RTC__DS3231_enableRegisterBit)
           XSRETURN_EMPTY;
         }
         return;
-#line 454 "DS3231.c"
+#line 543 "DS3231.c"
 	PUTBACK;
 	return;
     }
@@ -539,12 +628,41 @@ XS_EUPXS(XS_RPi__RTC__DS3231_setRegister)
 ;
 	int	value = (int)SvIV(ST(2))
 ;
-	char *	name = (char *)SvPV_nolen(ST(3))
+	char*	name = (char *)SvPV_nolen(ST(3))
 ;
 	int	RETVAL;
 	dXSTARG;
 
 	RETVAL = setRegister(fd, reg, value, name);
+	XSprePUSH; PUSHi((IV)RETVAL);
+    }
+    XSRETURN(1);
+}
+
+
+XS_EUPXS(XS_RPi__RTC__DS3231_setRegisterBits); /* prototype to pass -Wmissing-prototypes */
+XS_EUPXS(XS_RPi__RTC__DS3231_setRegisterBits)
+{
+    dVAR; dXSARGS;
+    if (items != 6)
+       croak_xs_usage(cv,  "fd, reg, lsb, nbits, value, name");
+    {
+	int	fd = (int)SvIV(ST(0))
+;
+	int	reg = (int)SvIV(ST(1))
+;
+	int	lsb = (int)SvIV(ST(2))
+;
+	int	nbits = (int)SvIV(ST(3))
+;
+	int	value = (int)SvIV(ST(4))
+;
+	char*	name = (char *)SvPV_nolen(ST(5))
+;
+	int	RETVAL;
+	dXSTARG;
+
+	RETVAL = setRegisterBits(fd, reg, lsb, nbits, value, name);
 	XSprePUSH; PUSHi((IV)RETVAL);
     }
     XSRETURN(1);
@@ -598,13 +716,10 @@ XS_EUPXS(XS_RPi__RTC__DS3231__establishI2C)
     {
 	int	fd = (int)SvIV(ST(0))
 ;
-	int	RETVAL;
-	dXSTARG;
 
-	RETVAL = _establishI2C(fd);
-	XSprePUSH; PUSHi((IV)RETVAL);
+	_establishI2C(fd);
     }
-    XSRETURN(1);
+    XSRETURN_EMPTY;
 }
 
 
@@ -654,6 +769,7 @@ XS_EXTERNAL(boot_RPi__RTC__DS3231)
         newXS_deffile("RPi::RTC::DS3231::getHour", XS_RPi__RTC__DS3231_getHour);
         newXS_deffile("RPi::RTC::DS3231::getSeconds", XS_RPi__RTC__DS3231_getSeconds);
         newXS_deffile("RPi::RTC::DS3231::getMinutes", XS_RPi__RTC__DS3231_getMinutes);
+        newXS_deffile("RPi::RTC::DS3231::setHour", XS_RPi__RTC__DS3231_setHour);
         newXS_deffile("RPi::RTC::DS3231::getFh", XS_RPi__RTC__DS3231_getFh);
         newXS_deffile("RPi::RTC::DS3231::disableRegisterBit", XS_RPi__RTC__DS3231_disableRegisterBit);
         newXS_deffile("RPi::RTC::DS3231::enableRegisterBit", XS_RPi__RTC__DS3231_enableRegisterBit);
@@ -661,6 +777,7 @@ XS_EXTERNAL(boot_RPi__RTC__DS3231)
         newXS_deffile("RPi::RTC::DS3231::getRegisterBit", XS_RPi__RTC__DS3231_getRegisterBit);
         newXS_deffile("RPi::RTC::DS3231::getRegisterBits", XS_RPi__RTC__DS3231_getRegisterBits);
         newXS_deffile("RPi::RTC::DS3231::setRegister", XS_RPi__RTC__DS3231_setRegister);
+        newXS_deffile("RPi::RTC::DS3231::setRegisterBits", XS_RPi__RTC__DS3231_setRegisterBits);
         newXS_deffile("RPi::RTC::DS3231::bcd2dec", XS_RPi__RTC__DS3231_bcd2dec);
         newXS_deffile("RPi::RTC::DS3231::dec2bcd", XS_RPi__RTC__DS3231_dec2bcd);
         newXS_deffile("RPi::RTC::DS3231::_establishI2C", XS_RPi__RTC__DS3231__establishI2C);
