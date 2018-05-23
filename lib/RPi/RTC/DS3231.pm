@@ -20,6 +20,14 @@ sub close {
     my ($self) = @_;
     _close($self->_fd);
 }
+sub am_pm {
+    my ($self, $meridien) = @_;
+
+    if (defined $meridien){
+        setMeridien($self->_fd, $meridien);
+    }
+    return getMeridien($self->_fd);
+}
 sub hour {
     my ($self, $hour) = @_;
 

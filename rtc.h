@@ -3,6 +3,8 @@
 #endif
 
 void  _establishI2C (int fd);
+int getMeridien (int fd);
+int setMeridien (int fd, int value);
 int getHour (int fd);
 int setHour (int fd, int value);
 int getFh ();

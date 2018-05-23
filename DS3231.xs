@@ -55,7 +55,7 @@ int getHour (int fd){
     }
     else {
         // 12 hr clock
-        hour = getRegisterBits(fd, RTC_HOUR, 4, 0);
+        hour = getRegisterBits(fd, RTC_HOUR, 3, 0);
     }
 
     return bcd2dec(hour);
@@ -90,6 +90,40 @@ int setHour (int fd, int value){
         setRegister(fd, RTC_HOUR, value, "hour");
         return 0;
     }
+}
+
+int getMeridien (int fd){
+
+    if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) == 0){
+        croak(
+            "AM/PM functionality not available when in 24-hour clock mode\n"
+        );
+    }
+    return getRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
+}
+
+int setMeridien (int fd, int value){
+
+    if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) == 0){
+        croak(
+            "AM/PM can not be set when in 24-hour clock mode\n"
+        );
+    }
+
+    if (value == 1){
+        enableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
+    }
+    else if (value == 0){
+        disableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
+    }
+    else {
+        croak(
+            "AM/PM value (%d) out of bounds. Send 1 for enable, 0 for disable",
+            value
+        );
+    }
+
+    return 0;
 }
 
 int getFh (){
@@ -235,6 +269,10 @@ MODULE = RPi::RTC::DS3231  PACKAGE = RPi::RTC::DS3231
 PROTOTYPES: DISABLE
 
 int
+getMeridien (fd)
+    int fd
+
+int
 getHour (fd)
 	int	fd
 
@@ -247,6 +285,10 @@ getMinutes (fd)
     int fd
 
 int setHour (fd, value)
+    int fd
+    int value
+
+int setMeridien (fd, value)
     int fd
     int value
 

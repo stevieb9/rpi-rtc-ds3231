@@ -64,7 +64,7 @@ int getHour (int fd){
     }
     else {
         // 12 hr clock
-        hour = getRegisterBits(fd, RTC_HOUR, 4, 0);
+        hour = getRegisterBits(fd, RTC_HOUR, 3, 0);
     }
 
     return bcd2dec(hour);
@@ -99,6 +99,40 @@ int setHour (int fd, int value){
         setRegister(fd, RTC_HOUR, value, "hour");
         return 0;
     }
+}
+
+int getMeridien (int fd){
+
+    if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) == 0){
+        croak(
+            "AM/PM functionality not available when in 24-hour clock mode\n"
+        );
+    }
+    return getRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
+}
+
+int setMeridien (int fd, int value){
+
+    if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) == 0){
+        croak(
+            "AM/PM can not be set when in 24-hour clock mode\n"
+        );
+    }
+
+    if (value == 1){
+        enableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
+    }
+    else if (value == 0){
+        disableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
+    }
+    else {
+        croak(
+            "AM/PM value (%d) out of bounds. Send 1 for enable, 0 for disable",
+            value
+        );
+    }
+
+    return 0;
 }
 
 int getFh (){
@@ -239,7 +273,7 @@ void _close (int fd){
     close(fd);
 }
 
-#line 243 "DS3231.c"
+#line 277 "DS3231.c"
 #ifndef PERL_UNUSED_VAR
 #  define PERL_UNUSED_VAR(var) if (0) var = var
 #endif
@@ -383,7 +417,26 @@ S_croak_xs_usage(const CV *const cv, const char *const params)
 #  define newXS_deffile(a,b) Perl_newXS_deffile(aTHX_ a,b)
 #endif
 
-#line 387 "DS3231.c"
+#line 421 "DS3231.c"
+
+XS_EUPXS(XS_RPi__RTC__DS3231_getMeridien); /* prototype to pass -Wmissing-prototypes */
+XS_EUPXS(XS_RPi__RTC__DS3231_getMeridien)
+{
+    dVAR; dXSARGS;
+    if (items != 1)
+       croak_xs_usage(cv,  "fd");
+    {
+	int	fd = (int)SvIV(ST(0))
+;
+	int	RETVAL;
+	dXSTARG;
+
+	RETVAL = getMeridien(fd);
+	XSprePUSH; PUSHi((IV)RETVAL);
+    }
+    XSRETURN(1);
+}
+
 
 XS_EUPXS(XS_RPi__RTC__DS3231_getHour); /* prototype to pass -Wmissing-prototypes */
 XS_EUPXS(XS_RPi__RTC__DS3231_getHour)
@@ -463,6 +516,27 @@ XS_EUPXS(XS_RPi__RTC__DS3231_setHour)
 }
 
 
+XS_EUPXS(XS_RPi__RTC__DS3231_setMeridien); /* prototype to pass -Wmissing-prototypes */
+XS_EUPXS(XS_RPi__RTC__DS3231_setMeridien)
+{
+    dVAR; dXSARGS;
+    if (items != 2)
+       croak_xs_usage(cv,  "fd, value");
+    {
+	int	fd = (int)SvIV(ST(0))
+;
+	int	value = (int)SvIV(ST(1))
+;
+	int	RETVAL;
+	dXSTARG;
+
+	RETVAL = setMeridien(fd, value);
+	XSprePUSH; PUSHi((IV)RETVAL);
+    }
+    XSRETURN(1);
+}
+
+
 XS_EUPXS(XS_RPi__RTC__DS3231_getFh); /* prototype to pass -Wmissing-prototypes */
 XS_EUPXS(XS_RPi__RTC__DS3231_getFh)
 {
@@ -495,10 +569,10 @@ XS_EUPXS(XS_RPi__RTC__DS3231_disableRegisterBit)
 ;
 	int	bit = (int)SvIV(ST(2))
 ;
-#line 262 "DS3231.xs"
+#line 304 "DS3231.xs"
         I32* temp;
-#line 501 "DS3231.c"
-#line 264 "DS3231.xs"
+#line 575 "DS3231.c"
+#line 306 "DS3231.xs"
         temp = PL_markstack_ptr++;
         disableRegisterBit(fd, reg, bit);
         if (PL_markstack_ptr != temp) {
@@ -506,7 +580,7 @@ XS_EUPXS(XS_RPi__RTC__DS3231_disableRegisterBit)
           XSRETURN_EMPTY;
         }
         return;
-#line 510 "DS3231.c"
+#line 584 "DS3231.c"
 	PUTBACK;
 	return;
     }
@@ -528,10 +602,10 @@ XS_EUPXS(XS_RPi__RTC__DS3231_enableRegisterBit)
 ;
 	int	bit = (int)SvIV(ST(2))
 ;
-#line 278 "DS3231.xs"
+#line 320 "DS3231.xs"
         I32* temp;
-#line 534 "DS3231.c"
-#line 280 "DS3231.xs"
+#line 608 "DS3231.c"
+#line 322 "DS3231.xs"
         temp = PL_markstack_ptr++;
         enableRegisterBit(fd, reg, bit);
         if (PL_markstack_ptr != temp) {
@@ -539,7 +613,7 @@ XS_EUPXS(XS_RPi__RTC__DS3231_enableRegisterBit)
           XSRETURN_EMPTY;
         }
         return;
-#line 543 "DS3231.c"
+#line 617 "DS3231.c"
 	PUTBACK;
 	return;
     }
@@ -766,10 +840,12 @@ XS_EXTERNAL(boot_RPi__RTC__DS3231)
 #  endif
 #endif
 
+        newXS_deffile("RPi::RTC::DS3231::getMeridien", XS_RPi__RTC__DS3231_getMeridien);
         newXS_deffile("RPi::RTC::DS3231::getHour", XS_RPi__RTC__DS3231_getHour);
         newXS_deffile("RPi::RTC::DS3231::getSeconds", XS_RPi__RTC__DS3231_getSeconds);
         newXS_deffile("RPi::RTC::DS3231::getMinutes", XS_RPi__RTC__DS3231_getMinutes);
         newXS_deffile("RPi::RTC::DS3231::setHour", XS_RPi__RTC__DS3231_setHour);
+        newXS_deffile("RPi::RTC::DS3231::setMeridien", XS_RPi__RTC__DS3231_setMeridien);
         newXS_deffile("RPi::RTC::DS3231::getFh", XS_RPi__RTC__DS3231_getFh);
         newXS_deffile("RPi::RTC::DS3231::disableRegisterBit", XS_RPi__RTC__DS3231_disableRegisterBit);
         newXS_deffile("RPi::RTC::DS3231::enableRegisterBit", XS_RPi__RTC__DS3231_enableRegisterBit);

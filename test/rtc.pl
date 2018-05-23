@@ -13,6 +13,9 @@ my $s = $rtc->sec;
 
 say "$h:$m:$s";
 
+say "meridien: " . $rtc->am_pm;
+say "meridien: " . $rtc->am_pm(1);
+
 #say $rtc->hour(11);
 
 # not done

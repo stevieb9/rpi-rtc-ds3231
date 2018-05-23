@@ -212,10 +212,10 @@ int main (void){
 //    disableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
 //    disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
 
-    enableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
-    enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+//    enableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
+//    enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
 
-    setHour(fd, 12);
+//    setHour(fd, 12);
 
     printf("elem %d: %d\n", 0, bcd2dec(getRegister(fd, RTC_SEC)));
     printf("elem %d: %d\n", 1, bcd2dec(getRegister(fd, RTC_MIN)));
