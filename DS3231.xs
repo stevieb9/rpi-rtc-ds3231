@@ -24,10 +24,10 @@
 
 #define RTC_SEC     0x00 // 0-59
 #define RTC_MIN     0x01 // 0-59
-#define RTC_HOUR    0x02
+#define RTC_HOUR    0x02 // 1-12 (12-hr clock), 0-23 (24-hr clock)
 #define RTC_WDAY    0x03 // day of week (1-7)
 #define RTC_MDAY    0x04 // day of month (1-31)
-#define RTC_MONTH   0x05
+#define RTC_MONTH   0x05 // 1-12
 #define RTC_YEAR    0x06
 
 // sub-level register bits
