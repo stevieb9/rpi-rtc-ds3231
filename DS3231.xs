@@ -162,7 +162,6 @@ int setMilitary (int fd, int value){
 
         if (hour == 0){
             // AM, at hour zero
-            enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
             setHour(fd, 12);
             disableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
         }
@@ -170,41 +169,36 @@ int setMilitary (int fd, int value){
             // AM
             setHour(fd, hour);
             disableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
-            enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
         }
         else {
             // PM
             setHour(fd, hour - 12);
-            enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
             enableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
         }
+
+        enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
     }
     else {
         // enable 24 hr clock
 
         int meridien = getMeridien(fd);
+        disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
 
         if (meridien == 0){
             // AM
-
             if (hour == 12){
-                disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
                 setHour(fd, 0);
             }
             else {
-                disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
                 setHour(fd, hour);
             }
         }
         else {
             // PM
-
             if (hour < 12){
-                disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
                 setHour(fd, hour + 12);
             }
             else {
-                disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
                 setHour(fd, hour);
             }
         }
