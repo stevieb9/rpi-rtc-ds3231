@@ -69,7 +69,7 @@ int getHour (int fd){
     }
     else {
         // 12 hr clock
-        hour = getRegisterBits(fd, RTC_HOUR, 3, 0);
+        hour = getRegisterBits(fd, RTC_HOUR, 4, 0);
     }
 
     return bcd2dec(hour);
@@ -80,6 +80,7 @@ int setHour (int fd, int value){
     if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) != 0){
         // 12 hour clock
 
+        printf("hr value: %d\n", value);
         if (value > 12 || value < 1){
             char* error =
                 "hour (%d) is out of bounds when in 12-hour clock " \
@@ -168,8 +169,8 @@ int setMilitary (int fd, int value){
         else if (getHour(fd) <= 12){
             // AM
             setHour(fd, getHour(fd));
-            enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
             disableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
+            enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
         }
         else {
             // PM
