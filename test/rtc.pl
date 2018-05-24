@@ -7,8 +7,13 @@ use RPi::RTC::DS3231;
 
 my $rtc = RPi::RTC::DS3231->new;
 
-#hour(4);
 military(0);
+
+$rtc->hour(17);
+$rtc->min(30);
+$rtc->sec(33);
+
+military(1);
 
 sub hour {$rtc->hour(shift)}
 sub military {$rtc->military_clock(shift)}

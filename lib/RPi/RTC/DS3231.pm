@@ -16,27 +16,9 @@ sub new {
     $self->_fd;
     return $self;
 }
-sub close {
-    my ($self) = @_;
-    _close($self->_fd);
-}
-sub am_pm {
-    my ($self, $meridien) = @_;
 
-    if (defined $meridien){
-        setMeridien($self->_fd, $meridien);
-    }
-    return getMeridien($self->_fd);
-}
-sub military_clock {
-    my ($self, $value) = @_;
+# time/date methods
 
-    if (defined $value){
-        print "defined!\n";
-        setMilitary($self->_fd, $value);
-    }
-    return getMilitary($self->_fd);
-}
 sub hour {
     my ($self, $hour) = @_;
 
@@ -56,10 +38,40 @@ sub min {
 sub sec {
     my ($self, $sec) = @_;
 
-    #FIXME: set seconds if set
-
+    if (defined $sec){
+        setSeconds($self->_fd, $sec);
+    }
     return getSeconds($self->_fd);
 }
+
+# auxillary time/date methods
+
+sub am_pm {
+    my ($self, $meridien) = @_;
+
+    if (defined $meridien){
+        setMeridien($self->_fd, $meridien);
+    }
+    return getMeridien($self->_fd);
+}
+sub military_clock {
+    my ($self, $value) = @_;
+
+    if (defined $value){
+        setMilitary($self->_fd, $value);
+    }
+    return getMilitary($self->_fd);
+}
+
+# operation methods
+
+sub close {
+    my ($self) = @_;
+    _close($self->_fd);
+}
+
+# internal methods
+
 sub _fd {
     my ($self) = @_;
 
@@ -77,6 +89,7 @@ sub _as_string {
 
     return length($int) < 2 ? "0$int" : $int;
 }
+
 sub __vim {};
 
 1;

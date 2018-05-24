@@ -3,24 +3,6 @@
 - add date_time() to get stringified date in DateTime format
 - add temp, plus its conversion
 
-- get/set 12/24
-
-- handle cases where someone tries to set a 12 hr clock to 24 hours, where
-  the time is currently > 12
-
-  # disable
-
-  (if time > 12, subtract 12 from time and enable(set) pm flag)
-  Technically, if time <= 12, am/pm flag should already be disabled
-
-  # enable
-
-  - fetch am/pm
-  - if am and hour = 12, set hour to 0
-  - if am and < 12, leave alone
-  - if pm and hour = 12, leave alone
-  - if pm and hour < 12, add 12 hours
-
 
  - bounds checking on all set calls per register field
 

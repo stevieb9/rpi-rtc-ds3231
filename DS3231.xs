@@ -41,6 +41,10 @@ int getSeconds (int fd){
     return bcd2dec(getRegister(fd, RTC_SEC));
 }
 
+int setSeconds (int fd, int value){
+    setRegister(fd, RTC_SEC, dec2bcd(value), "seconds");
+}
+
 int getMinutes (int fd){
     return bcd2dec(getRegister(fd, RTC_MIN));
 }
@@ -326,6 +330,10 @@ void _close (int fd){
 MODULE = RPi::RTC::DS3231  PACKAGE = RPi::RTC::DS3231
 
 PROTOTYPES: DISABLE
+
+int setSeconds (fd, value)
+    int fd
+    int value
 
 int setMinutes (fd, value)
     int fd
