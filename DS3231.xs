@@ -42,6 +42,9 @@ int getSeconds (int fd){
 }
 
 int setSeconds (int fd, int value){
+    if (value < 0 || value > 60){
+        croak("seconds parameter out of bounds. Must be between 0-60\n");
+    }
     setRegister(fd, RTC_SEC, dec2bcd(value), "seconds");
 }
 
