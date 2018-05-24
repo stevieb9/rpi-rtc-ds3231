@@ -4,13 +4,13 @@
 
 void  _establishI2C (int fd);
 int getMeridien (int fd);
-int setMeridien (int fd, int value);
+void setMeridien (int fd, int value);
 int getMilitary (int fd);
-int setMilitary (int fd, int value);
+void setMilitary (int fd, int value);
 int getHour (int fd);
-int setHour (int fd, int value);
+void setHour (int fd, int value);
 int getMinutes (int fd);
-int setMinutes (int fd, int value);
+void setMinutes (int fd, int value);
 int getFh ();
 void disableRegisterBit (int fd, int reg, int bit);
 void enableRegisterBit (int fd, int reg, int bit);

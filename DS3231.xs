@@ -32,7 +32,7 @@
 
 // sub-level register bits
 
-// sub register RTC_HOUR
+// RTC_HOUR sub-level register bits
 
 #define RTC_AM_PM   0x05
 #define RTC_12_24   0x06
@@ -41,7 +41,7 @@ int getSeconds (int fd){
     return bcd2dec(getRegister(fd, RTC_SEC));
 }
 
-int setSeconds (int fd, int value){
+void setSeconds (int fd, int value){
     if (value < 0 || value > 59){
         croak("seconds parameter out of bounds. Must be between 0-59\n");
     }
@@ -52,7 +52,7 @@ int getMinutes (int fd){
     return bcd2dec(getRegister(fd, RTC_MIN));
 }
 
-int setMinutes (int fd, int value){
+void setMinutes (int fd, int value){
     if (value < 0 || value > 59){
         croak("minutes parameter out of bounds. Must be between 0-59\n");
     }
@@ -75,7 +75,7 @@ int getHour (int fd){
     return bcd2dec(hour);
 }
 
-int setHour (int fd, int value){
+void setHour (int fd, int value){
 
     if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) != 0){
         // 12 hour clock
@@ -89,7 +89,6 @@ int setHour (int fd, int value){
         }
 
         setRegisterBits(fd, RTC_HOUR, 0, 5, value, "hour");
-        return 0;
     }
     else {
         // 24 hour clock
@@ -105,7 +104,6 @@ int setHour (int fd, int value){
 
         value = dec2bcd(value);
         setRegister(fd, RTC_HOUR, value, "hour");
-        return 0;
     }
 }
 
@@ -119,7 +117,7 @@ int getMeridien (int fd){
     return getRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
 }
 
-int setMeridien (int fd, int value){
+void setMeridien (int fd, int value){
 
     if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) == 0){
         croak(
@@ -139,22 +137,20 @@ int setMeridien (int fd, int value){
             value
         );
     }
-
-    return 0;
 }
 
 int getMilitary (int fd){
     return getRegisterBit(fd, RTC_HOUR, RTC_12_24);
 }
 
-int setMilitary (int fd, int value){
+void setMilitary (int fd, int value){
 
     int militaryTime = getMilitary(fd);
     int hour = getHour(fd);
 
     if (militaryTime == value){
         // nothing to do
-        return 0;
+        return;
     }
 
     if (value == 1){
@@ -338,22 +334,26 @@ MODULE = RPi::RTC::DS3231  PACKAGE = RPi::RTC::DS3231
 
 PROTOTYPES: DISABLE
 
-int setSeconds (fd, value)
+void
+setSeconds (fd, value)
     int fd
     int value
 
-int setMinutes (fd, value)
+void
+setMinutes (fd, value)
     int fd
     int value
 
-int setMilitary (fd, value)
+void
+setMilitary (fd, value)
     int fd
     int value
-
-int getMilitary (fd)
-    int fd
 
 int
+getMilitary (fd)
+    int fd
+
+void
 setMeridien (fd, value)
     int fd
     int value
@@ -374,7 +374,8 @@ int
 getMinutes (fd)
     int fd
 
-int setHour (fd, value)
+void
+setHour (fd, value)
     int fd
     int value
 
