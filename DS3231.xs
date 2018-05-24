@@ -53,6 +53,9 @@ int getMinutes (int fd){
 }
 
 int setMinutes (int fd, int value){
+    if (value < 0 || value > 59){
+        croak("minutes parameter out of bounds. Must be between 0-59\n");
+    }
     setRegister(fd, RTC_MIN, dec2bcd(value), "minutes");
 }
 
