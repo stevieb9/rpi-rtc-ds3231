@@ -22,8 +22,8 @@
 
 // sub-level registers
 
-#define RTC_SEC     0x00
-#define RTC_MIN     0x01
+#define RTC_SEC     0x00 // 0-59
+#define RTC_MIN     0x01 // 0-59
 #define RTC_HOUR    0x02
 #define RTC_WDAY    0x03 // day of week (1-7)
 #define RTC_MDAY    0x04 // day of month (1-31)
@@ -42,8 +42,8 @@ int getSeconds (int fd){
 }
 
 int setSeconds (int fd, int value){
-    if (value < 0 || value > 60){
-        croak("seconds parameter out of bounds. Must be between 0-60\n");
+    if (value < 0 || value > 59){
+        croak("seconds parameter out of bounds. Must be between 0-59\n");
     }
     setRegister(fd, RTC_SEC, dec2bcd(value), "seconds");
 }
