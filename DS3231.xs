@@ -34,8 +34,8 @@
 
 // sub register RTC_HOUR
 
-#define RTC_AM_PM       0x05
-#define RTC_12_24       0x06
+#define RTC_AM_PM   0x05
+#define RTC_12_24   0x06
 
 int getSeconds (int fd){
     return bcd2dec(getRegister(fd, RTC_SEC));
@@ -150,6 +150,7 @@ int getMilitary (int fd){
 int setMilitary (int fd, int value){
 
     int militaryTime = getMilitary(fd);
+    int hour = getHour(fd);
 
     if (militaryTime == value){
         // nothing to do
@@ -159,7 +160,7 @@ int setMilitary (int fd, int value){
     if (value == 1){
         // enable 12 hr clock
 
-        if (getHour(fd) == 0){
+        if (hour == 0){
             // AM, at hour zero
             enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
             setHour(fd, 12);
@@ -167,13 +168,13 @@ int setMilitary (int fd, int value){
         }
         else if (getHour(fd) <= 12){
             // AM
-            setHour(fd, getHour(fd));
+            setHour(fd, hour);
             disableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
             enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
         }
         else {
             // PM
-            setHour(fd, getHour(fd) - 12);
+            setHour(fd, hour - 12);
             enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
             enableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
         }
@@ -186,28 +187,25 @@ int setMilitary (int fd, int value){
         if (meridien == 0){
             // AM
 
-            int hr = getHour(fd);
-
-            if (hr == 12){
+            if (hour == 12){
                 disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
                 setHour(fd, 0);
             }
             else {
                 disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
-                setHour(fd, hr);
+                setHour(fd, hour);
             }
         }
         else {
             // PM
 
-            int hr = getHour(fd);
-            if (hr < 12){
+            if (hour < 12){
                 disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
-                setHour(fd, hr + 12);
+                setHour(fd, hour + 12);
             }
             else {
                 disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
-                setHour(fd, hr);
+                setHour(fd, hour);
             }
         }
     }
