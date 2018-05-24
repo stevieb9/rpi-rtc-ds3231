@@ -159,7 +159,13 @@ int setMilitary (int fd, int value){
     if (value == 1){
         // enable 12 hr clock
 
-        if (getHour(fd) <= 12){
+        if (getHour(fd) == 0){
+            // AM, at hour zero
+            enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
+            setHour(fd, 12);
+            disableRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
+        }
+        else if (getHour(fd) <= 12){
             // AM
             setHour(fd, getHour(fd));
             enableRegisterBit(fd, RTC_HOUR, RTC_12_24);
