@@ -81,10 +81,11 @@ int setHour (int fd, int value){
         // 12 hour clock
 
         if (value > 12 || value < 1){
-            croak(
-                "hour (%d) is out of bounds when in 12-hour clock mode\n",
-                value
-            );
+            char* error =
+                "hour (%d) is out of bounds when in 12-hour clock " \
+                "mode. Valid values are 1-12";
+
+            croak(error);
         }
 
         setRegisterBits(fd, RTC_HOUR, 0, 4, value, "hour");
@@ -94,10 +95,12 @@ int setHour (int fd, int value){
         // 24 hour clock
 
         if (value > 23 || value < 0){
-            croak(
-                "hour (%d) is out of bounds when in 24-hour clock mode\n",
-                value
-            );
+
+            char* error =
+                "hour (%d) is out of bounds when in 24-hour clock " \
+                "mode. Valid values are 0-23";
+
+            croak(error);
         }
 
         value = dec2bcd(value);
