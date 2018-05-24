@@ -54,10 +54,14 @@ sub am_pm {
     }
     return getMeridien($self->_fd);
 }
-sub military_clock {
+sub clock_hours {
     my ($self, $value) = @_;
 
     if (defined $value){
+        if ($value !~ /\d+/ || ($value != 12 && $value != 24)){
+            croak "clock_hours() requires either 12 or 24 as a parameter\n";
+        }
+        $value = $value == 12 ? 1 : 0;
         setMilitary($self->_fd, $value);
     }
     return getMilitary($self->_fd);

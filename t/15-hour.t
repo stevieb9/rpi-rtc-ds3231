@@ -12,7 +12,7 @@ my $mod = 'RPi::RTC::DS3231';
 
     # set 24 hr clock mode
 
-    $o->military_clock(0);
+    $o->clock_hours(24);
 
     for (0..23){
         is $o->hour($_), $_, "setting 24-clock hour to '$_' result is ok";
@@ -31,7 +31,7 @@ my $mod = 'RPi::RTC::DS3231';
 
     # set 12 hr clock mode
 
-    is $o->military_clock(1), 1, "set to 12 hr clock ok";
+    is $o->clock_hours(12), 1, "set to 12 hr clock ok";
 
     for (1..12){
         $o->hour($_);

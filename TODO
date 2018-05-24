@@ -3,6 +3,7 @@
 - add date_time() to get stringified date in DateTime format
 - add temp, plus its conversion
 
+- add constants to RPi::Const, and remove hardcoded info (clock_hours() etc)
 
  - bounds checking on all set calls per register field
 
