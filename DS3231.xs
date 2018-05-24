@@ -80,7 +80,6 @@ int setHour (int fd, int value){
     if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) != 0){
         // 12 hour clock
 
-        printf("hr value: %d\n", value);
         if (value > 12 || value < 1){
             char* error =
                 "hour (%d) is out of bounds when in 12-hour clock " \
@@ -89,8 +88,7 @@ int setHour (int fd, int value){
             croak(error);
         }
 
-        setRegisterBits(fd, RTC_HOUR, 0, 4, value, "hour");
-        printf("HR REG: %d\n", bcd2dec(getRegister(fd, RTC_HOUR)));
+        setRegisterBits(fd, RTC_HOUR, 0, 5, value, "hour");
         return 0;
     }
     else {
