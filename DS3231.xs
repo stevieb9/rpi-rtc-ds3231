@@ -90,6 +90,7 @@ int setHour (int fd, int value){
         }
 
         setRegisterBits(fd, RTC_HOUR, 0, 4, value, "hour");
+        printf("HR REG: %d\n", bcd2dec(getRegister(fd, RTC_HOUR)));
         return 0;
     }
     else {

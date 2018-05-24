@@ -72,6 +72,10 @@ sub close {
 
 # internal methods
 
+sub _get_register {
+    my ($self, $reg) = @_;
+    return getRegister($self->_fd, $reg);
+}
 sub _fd {
     my ($self) = @_;
 
