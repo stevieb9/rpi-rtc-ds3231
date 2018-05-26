@@ -13,7 +13,7 @@ int getHour (int fd);
 int getMeridien (int fd);
 int getMilitary (int fd);
 
-void setSeconds int fd, int value);
+void setSeconds (int fd, int value);
 void setMinutes (int fd, int value);
 void setHour (int fd, int value);
 
