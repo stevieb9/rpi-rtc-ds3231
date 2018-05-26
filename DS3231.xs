@@ -172,9 +172,8 @@ void setMilitary (int fd, int value){
     }
     else {
         // enable 24 hr clock
-        disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
-
         int meridien = getMeridien(fd);
+        disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
 
         if (meridien == 0){
             // AM
