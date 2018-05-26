@@ -71,7 +71,6 @@ int getHour (int fd){
         // 12 hr clock
         hour = getRegisterBits(fd, RTC_HOUR, 4, 0);
     }
-
     return bcd2dec(hour);
 }
 
@@ -87,21 +86,18 @@ void setHour (int fd, int value){
 
             croak(error);
         }
-
         setRegisterBits(fd, RTC_HOUR, 0, 5, value, "hour");
     }
     else {
         // 24 hour clock
 
         if (value > 23 || value < 0){
-
             char* error =
                 "hour (%d) is out of bounds when in 24-hour clock " \
                 "mode. Valid values are 0-23";
 
             croak(error);
         }
-
         value = dec2bcd(value);
         setRegister(fd, RTC_HOUR, value, "hour");
     }
@@ -116,6 +112,7 @@ int getMeridien (int fd){
     }
     return getRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
 }
+
 
 void setMeridien (int fd, int value){
 
@@ -155,7 +152,6 @@ void setMilitary (int fd, int value){
 
     if (value == 1){
         // enable 12 hr clock
-
         if (hour == 0){
             // AM, at hour zero
             setHour(fd, 12);
@@ -176,9 +172,9 @@ void setMilitary (int fd, int value){
     }
     else {
         // enable 24 hr clock
+        disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
 
         int meridien = getMeridien(fd);
-        disableRegisterBit(fd, RTC_HOUR, RTC_12_24);
 
         if (meridien == 0){
             // AM
@@ -322,7 +318,7 @@ void _establishI2C (int fd){
 
     if (write(fd, buf, 1) != 1){
         close(fd);
-		croak("Error: Received no ACK-Bit, couldn't established connection!");
+		croak("Error: Received no ACK bit, couldn't establish connection!");
     }
 }
 
