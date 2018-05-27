@@ -11,8 +11,8 @@ my $mod = 'RPi::RTC::DS3231';
 
     my $o = $mod->new;
 
-    for (1..99){
-        is $o->year($_), $_ + 2000, "setting year to $_ ok";
+    for (2000..2099){
+        is $o->year($_), $_, "setting year to $_ ok";
     }
 }
 
@@ -20,7 +20,7 @@ my $mod = 'RPi::RTC::DS3231';
 
     my $o = $mod->new;
 
-    for (qw(-1 100)){
+    for (qw(1999 2100)){
         is eval { $o->year($_); 1; }, undef, "setting year to '$_' fails ok";
     }
 }

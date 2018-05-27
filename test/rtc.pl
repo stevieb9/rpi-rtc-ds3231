@@ -10,5 +10,5 @@ my $rtc = RPi::RTC::DS3231->new;
 #say $rtc->temp();
 
 $rtc->clock_hours(12);
-
-say $rtc->hms;
+$rtc->year(2000);
+say $rtc->datetime;

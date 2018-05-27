@@ -155,11 +155,13 @@ int getYear (int fd){
 
 void setYear (int fd, int value){
 
-    if (value < 1 || value > 99){
-        croak("Year (%d) out of range. Must be between 1-99\n", value);
+    if (value < 2000 || value > 2099){
+        croak("Year (%d) out of range. Must be between 2000-2099\n", value);
     }
 
-    setRegister(fd, RTC_YEAR, dec2bcd(value), "year");
+    int year = value - 2000;
+
+    setRegister(fd, RTC_YEAR, dec2bcd(year), "year");
 }
 
 float getTemp (int fd){

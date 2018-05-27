@@ -82,7 +82,14 @@ sub sec {
 
 sub am_pm {
     my ($self, $meridien) = @_;
-    if (defined $meridien){
+
+    if (defined $meridien) {
+        if ($meridien eq 'AM') {
+            $meridien = 0;
+        }
+        else {
+            $meridien = 1;
+        }
         setMeridien($self->_fd, $meridien);
     }
     return getMeridien($self->_fd) ? 'PM' : 'AM';
@@ -110,6 +117,29 @@ sub hms {
     $hms = "$hms " . $self->am_pm if $self->clock_hours == 12;
 
     return $hms;
+}
+sub datetime {
+    my ($self) = @_;
+
+    my $y = getYear($self->_fd);
+    my $mon = stringify(getMonth($self->_fd));
+    my $day = stringify(getDayOfMonth($self->_fd));
+
+    my $h;
+
+    if ($self->clock_hours == 12){
+        $self->clock_hours(24);
+        $h = stringify(getHour($self->_fd));
+        $self->clock_hours(12);
+    }
+    else {
+        $h = stringify(getHour($self->_fd));
+    }
+
+    my $m = stringify(getMinutes($self->_fd));
+    my $s = stringify(getSeconds($self->_fd));
+
+    return "$y-$mon-$day $h:$m:$s";
 }
 # operation methods
 
