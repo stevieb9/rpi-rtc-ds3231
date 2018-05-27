@@ -146,6 +146,18 @@ void setMonth (int fd, int value){
     setRegisterBits(fd, RTC_MONTH, 0, 7, value, "month");
 }
 
+int getYear (int fd){
+    return bcd2dec(getRegister(fd, RTC_YEAR)) + 2000;
+}
+
+void setYear (int fd, int value){
+
+    if (value < 1 || value > 99){
+        croak("Year (%d) out of range. Must be between 1-99\n", value);
+    }
+
+    setRegister(fd, RTC_YEAR, dec2bcd(value), "year");
+}
 int getMeridien (int fd){
 
     if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) == 0){
@@ -438,6 +450,13 @@ int getMonth (fd)
     int fd
 
 void setMonth (fd, value)
+    int fd
+    int value
+
+int getYear (fd)
+    int fd
+
+void setYear (fd, value)
     int fd
     int value
 

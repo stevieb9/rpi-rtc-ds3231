@@ -19,6 +19,14 @@ sub new {
 
 # time/date methods
 
+sub year {
+    my ($self, $year) = @_;
+
+    if (defined $year){
+        setYear($self->_fd, $year);
+    }
+    return getYear($self->_fd);
+}
 sub month {
     my ($self, $month) = @_;
 
