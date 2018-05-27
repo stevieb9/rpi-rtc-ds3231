@@ -117,6 +117,19 @@ void setDayOfWeek (int fd, int value){
     setRegister(fd, RTC_WDAY, dec2bcd(value), "wday");
 }
 
+int getDayOfMonth (int fd){
+    return(bcd2dec(getRegister(fd, RTC_MDAY)));
+}
+
+void setDayOfMonth (int fd, int value){
+
+    if (value < 1 || value > 31){
+        croak("Month day (%d) out of range. Must be between 1-31\n", value);
+    }
+
+    setRegister(fd, RTC_MDAY, dec2bcd(value), "dayofmonth");
+}
+
 int getMeridien (int fd){
 
     if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) == 0){
@@ -393,6 +406,15 @@ getDayOfWeek (fd)
 
 void
 setDayOfWeek (fd, value)
+    int fd
+    int value
+
+int
+getDayOfMonth (fd)
+    int fd
+
+void
+setDayOfMonth (fd, value)
     int fd
     int value
 

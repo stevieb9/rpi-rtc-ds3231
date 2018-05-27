@@ -19,6 +19,14 @@ sub new {
 
 # time/date methods
 
+sub mday {
+    my ($self, $mday) = @_;
+
+    if (defined $mday){
+        setDayOfMonth($self->_fd, $mday);
+    }
+    return getDayOfMonth($self->_fd);
+}
 sub day {
     my ($self, $wday) = @_;
 
