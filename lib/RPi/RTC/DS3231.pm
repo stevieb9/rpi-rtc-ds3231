@@ -19,6 +19,14 @@ sub new {
 
 # time/date methods
 
+sub day {
+    my ($self, $wday) = @_;
+
+    if (defined $wday){
+        setDayOfWeek($self->_fd, $wday);
+    }
+    return getDayOfWeek($self->_fd);
+}
 sub hour {
     my ($self, $hour) = @_;
 

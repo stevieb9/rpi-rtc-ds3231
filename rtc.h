@@ -2,6 +2,16 @@
 #define _RTC_H_
 #endif
 
+const char* dayOfWeek[7] = {
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
+};
+
 void  _establishI2C (int fd);
 
 int getFh ();

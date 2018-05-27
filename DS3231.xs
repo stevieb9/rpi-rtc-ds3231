@@ -103,6 +103,20 @@ void setHour (int fd, int value){
     }
 }
 
+const char* getDayOfWeek (int fd){
+    int dow = bcd2dec(getRegister(fd, RTC_WDAY));
+    return dayOfWeek[dow - 1];
+}
+
+void setDayOfWeek (int fd, int value){
+
+    if (value > 7 || value < 1){
+        croak("Day of week (%d) out of bounds. Must be 1-7 (Mon-Sun)\n", value);
+    }
+
+    setRegister(fd, RTC_WDAY, dec2bcd(value), "wday");
+}
+
 int getMeridien (int fd){
 
     if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) == 0){
@@ -112,7 +126,6 @@ int getMeridien (int fd){
     }
     return getRegisterBit(fd, RTC_HOUR, RTC_AM_PM);
 }
-
 
 void setMeridien (int fd, int value){
 
@@ -371,6 +384,15 @@ getMinutes (fd)
 
 void
 setHour (fd, value)
+    int fd
+    int value
+
+const char*
+getDayOfWeek (fd)
+    int fd
+
+void
+setDayOfWeek (fd, value)
     int fd
     int value
 
