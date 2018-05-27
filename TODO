@@ -1,9 +1,7 @@
 - add system_to_rtc()
 - add rtc_to_system()
 - add date_time() to get stringified date in DateTime format
-- add temp, plus its conversion
 
 - add constants to RPi::Const, and remove hardcoded info (clock_hours() etc)
 
- - bounds checking on all set calls per register field
 

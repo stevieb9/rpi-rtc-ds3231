@@ -20,9 +20,11 @@ sub new {
 # misc methods
 
 sub temp {
-    my ($self) = @_;
+    my ($self, $output) = @_;
 
-    return getTemp($self->_fd);
+    my $celcius =  getTemp($self->_fd);
+
+    return defined $output && $output eq 'f' ? $celcius * 9/5 + 32 : $celcius;
 }
 
 # time/date methods
