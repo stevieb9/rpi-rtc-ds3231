@@ -16,11 +16,11 @@
 
 #define RTC_ADDR    0x68
 
-// top-level registers
+/* top-level register */
 
 #define RTC_REG_DT  0x00
 
-// sub-level registers
+/* sub-level registers */
 
 #define RTC_SEC     0x00 // 0-59
 #define RTC_MIN     0x01 // 0-59
@@ -28,12 +28,12 @@
 #define RTC_WDAY    0x03 // day of week (1-7)
 #define RTC_MDAY    0x04 // day of month (1-31)
 #define RTC_MONTH   0x05 // 1-12
-#define RTC_YEAR    0x06
+#define RTC_YEAR    0x06 // 1-99
 
 #define RTC_TEMP_MSB 0x11
 #define RTC_TEMP_LSB 0x12
 
-// sub-level register bits
+/* sub-level register bits */
 
 // RTC_HOUR sub-level register bits
 
