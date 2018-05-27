@@ -130,6 +130,22 @@ void setDayOfMonth (int fd, int value){
     setRegister(fd, RTC_MDAY, dec2bcd(value), "dayofmonth");
 }
 
+int getMonth (int fd){
+
+    int regVal = getRegister(fd, RTC_MONTH);
+    int century = regVal & 0b10000000;
+    return bcd2dec(regVal & 0b01111111);
+}
+
+void setMonth (int fd, int value){
+
+    if (value < 1 || value > 12){
+        croak("Month (%d) out of range. Must be between 1-12\n", value);
+    }
+
+    setRegisterBits(fd, RTC_MONTH, 0, 7, value, "month");
+}
+
 int getMeridien (int fd){
 
     if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) == 0){
@@ -415,6 +431,13 @@ getDayOfMonth (fd)
 
 void
 setDayOfMonth (fd, value)
+    int fd
+    int value
+
+int getMonth (fd)
+    int fd
+
+void setMonth (fd, value)
     int fd
     int value
 
