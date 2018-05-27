@@ -30,6 +30,9 @@
 #define RTC_MONTH   0x05 // 1-12
 #define RTC_YEAR    0x06
 
+#define RTC_TEMP_MSB 0x11
+#define RTC_TEMP_LSB 0x12
+
 // sub-level register bits
 
 // RTC_HOUR sub-level register bits
@@ -158,6 +161,17 @@ void setYear (int fd, int value){
 
     setRegister(fd, RTC_YEAR, dec2bcd(value), "year");
 }
+
+float getTemp (int fd){
+
+    int msb = getRegister(fd, RTC_TEMP_MSB);
+    int lsb = getRegister(fd, RTC_TEMP_LSB);
+
+    float celcius = ((((short)msb << 8) | (short)lsb) >> 6) / 4.0;
+
+    return celcius;
+}
+
 int getMeridien (int fd){
 
     if ((getRegisterBit(fd, RTC_HOUR, RTC_12_24)) == 0){
@@ -459,6 +473,9 @@ int getYear (fd)
 void setYear (fd, value)
     int fd
     int value
+
+float getTemp (fd)
+    int fd
 
 int
 getFh ()

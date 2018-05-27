@@ -17,6 +17,14 @@ sub new {
     return $self;
 }
 
+# misc methods
+
+sub temp {
+    my ($self) = @_;
+
+    return getTemp($self->_fd);
+}
+
 # time/date methods
 
 sub year {
