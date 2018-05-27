@@ -60,6 +60,7 @@ sub hour {
     if (defined $hour){
         setHour($self->_fd, $hour);
     }
+
     return getHour($self->_fd);
 }
 sub min {
@@ -84,7 +85,7 @@ sub am_pm {
     if (defined $meridien){
         setMeridien($self->_fd, $meridien);
     }
-    return getMeridien($self->_fd);
+    return getMeridien($self->_fd) ? 'PM' : 'AM';
 }
 sub clock_hours {
     my ($self, $value) = @_;
@@ -95,14 +96,35 @@ sub clock_hours {
         $value = $value == 12 ? 1 : 0;
         setMilitary($self->_fd, $value);
     }
-    return getMilitary($self->_fd);
+    return getMilitary($self->_fd) ? 12 : 24;
 }
+sub hms {
+    my ($self) = @_;
 
+    my $h = stringify(getHour($self->_fd));
+    my $m = stringify(getMinutes($self->_fd));
+    my $s = stringify(getSeconds($self->_fd));
+
+    my $hms = "$h:$m:$s";
+
+    $hms = "$hms " . $self->am_pm if $self->clock_hours == 12;
+
+    return $hms;
+}
 # operation methods
 
 sub close {
     my ($self) = @_;
     _close($self->_fd);
+}
+sub stringify {
+    my ($int) = @_;
+
+    if (! defined $int || $int !~ /\d+/){
+        croak "as_string() requires an integer to check/convert to str\n";
+    }
+
+    return length($int) < 2 ? "0$int" : $int;
 }
 
 # internal methods
@@ -119,15 +141,7 @@ sub _fd {
     }
     return $self->{fd};
 }
-sub _as_string {
-    my ($self, $int) = @_;
 
-    if (! defined $int){
-        croak "as_string() requires an integer to check/convert to str\n";
-    }
-
-    return length($int) < 2 ? "0$int" : $int;
-}
 
 sub __vim {};
 
