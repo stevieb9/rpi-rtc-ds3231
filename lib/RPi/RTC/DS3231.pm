@@ -144,6 +144,7 @@ sub datetime {
 
     return "$y-$mon-$day $h:$m:$s";
 }
+
 # operation methods
 
 sub close {
@@ -183,14 +184,13 @@ __END__
 
 =head1 NAME
 
-RPi::RTC::DS3231 - The great new RPi::RTC::DS3231!
+RPi::RTC::DS3231 - Interface to the DS3231 Real-Time Clock IC over I2C
 
 =head1 SYNOPSIS
 
 =head1 AUTHOR
 
 Steve Bertrand, C<< <steveb at cpan.org> >>
-
 
 =head1 LICENSE AND COPYRIGHT
 

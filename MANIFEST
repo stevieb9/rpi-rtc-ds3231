@@ -19,6 +19,8 @@ t/35-month_day.t
 t/40-month.t
 t/45-year.t
 t/50-temp.t
+t/55-hms.t
+t/60-datetime.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t
