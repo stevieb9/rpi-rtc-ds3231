@@ -10,11 +10,14 @@ my $mod = 'RPi::RTC::DS3231';
 { # set/get
 
     my $o = $mod->new;
-
     my $temp = $o->temp;
-
     like $temp, qr/\d+(?:\.\d{2})?/, "temp() return is ok";
-
 }
 
+{ # set/get
+
+    my $o = $mod->new;
+    my $f = $o->temp('f');
+    like $f, qr/\d+(?:\.\d{2})?/, "temp('f') return is ok";
+}
 done_testing();

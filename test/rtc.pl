@@ -7,4 +7,4 @@ use RPi::RTC::DS3231;
 
 my $rtc = RPi::RTC::DS3231->new;
 
-say $rtc->temp('f');
+say $rtc->temp();

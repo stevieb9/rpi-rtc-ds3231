@@ -1,6 +1,7 @@
 ^images/
 .bs$
-.c$
+DS3231.c$
+CMakeLists.txt$
 .sh$
 \.o$
 ~$
