@@ -21,9 +21,7 @@ sub new {
 
 sub temp {
     my ($self, $output) = @_;
-
     my $celcius =  getTemp($self->_fd);
-
     return defined $output && $output eq 'f' ? $celcius * 9/5 + 32 : $celcius;
 }
 
@@ -31,7 +29,6 @@ sub temp {
 
 sub year {
     my ($self, $year) = @_;
-
     if (defined $year){
         setYear($self->_fd, $year);
     }
@@ -39,7 +36,6 @@ sub year {
 }
 sub month {
     my ($self, $month) = @_;
-
     if (defined $month){
         setMonth($self->_fd, $month);
     }
@@ -47,7 +43,6 @@ sub month {
 }
 sub mday {
     my ($self, $mday) = @_;
-
     if (defined $mday){
         setDayOfMonth($self->_fd, $mday);
     }
@@ -55,7 +50,6 @@ sub mday {
 }
 sub day {
     my ($self, $wday) = @_;
-
     if (defined $wday){
         setDayOfWeek($self->_fd, $wday);
     }
@@ -63,7 +57,6 @@ sub day {
 }
 sub hour {
     my ($self, $hour) = @_;
-
     if (defined $hour){
         setHour($self->_fd, $hour);
     }
@@ -71,7 +64,6 @@ sub hour {
 }
 sub min {
     my ($self, $min) = @_;
-
     if (defined $min){
         setMinutes($self->_fd, $min);
     }
@@ -79,7 +71,6 @@ sub min {
 }
 sub sec {
     my ($self, $sec) = @_;
-
     if (defined $sec){
         setSeconds($self->_fd, $sec);
     }
@@ -90,7 +81,6 @@ sub sec {
 
 sub am_pm {
     my ($self, $meridien) = @_;
-
     if (defined $meridien){
         setMeridien($self->_fd, $meridien);
     }
@@ -98,7 +88,6 @@ sub am_pm {
 }
 sub clock_hours {
     my ($self, $value) = @_;
-
     if (defined $value){
         if ($value !~ /\d+/ || ($value != 12 && $value != 24)){
             croak "clock_hours() requires either 12 or 24 as a parameter\n";

@@ -1,4 +1,7 @@
 #include "bit.h"
+#include "EXTERN.h"
+#include "perl.h"
+#include "XSUB.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,30 +71,22 @@ int bitOff (unsigned int data, int bit){
  
 void _checkMSB (int msb){
     if (msb < 0){
-        // croak here, and in all other functions that exit()
-        printf("\nbit_get() $msb param must be greater than zero\n\n");
-        exit(-1);
+        croak("\nbit_get() $msb param must be greater than zero\n\n");
     }
 }
  
 void _checkLSB (int msb, int lsb){
     if (lsb < 0){
-        // croak("\nbit_get() $lsb param can not be negative\n\n");
-        printf("\nbit_get() $lsb param can not be negative\n\n");
-        exit(-1);
+        croak("\nbit_get() $lsb param can not be negative\n\n");
     }
  
     if (lsb + 1 > (msb)){
-        // croak("\nbit_get() $lsb param must be less than or equal to $msb\n\n");
-        printf("\nbit_get() $lsb param must be less than or equal to $msb\n\n");
+        croak("\nbit_get() $lsb param must be less than or equal to $msb\n\n");
     }
 }
  
 void _checkValue (int value){
     if (value < 0){
-        // croak("\nbit_set() $value param must be zero or greater\n\n");
-        printf("\nbit_set() $value param must be zero or greater\n\n");
-        exit(-1);
+        croak("\nbit_set() $value param must be zero or greater\n\n");
     }
 }
-
