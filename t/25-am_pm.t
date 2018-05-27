@@ -14,7 +14,7 @@ my $mod = 'RPi::RTC::DS3231';
     is $o->clock_hours(24), 24, "24 hr clock enabled ok";
     is eval { $o->am_pm; 1 }, undef, "reading AM/PM fails in 24-hr clk mode";
     like $@, qr/not available when in 24/, "...and error is sane";
-    is eval { $o->am_pm(1); 1 }, undef, "writing AM/PM fails in 24-hr clk mode";
+    is eval { $o->am_pm('AM'); 1 }, undef, "writing AM/PM fails in 24-hr clk mode";
     like $@, qr/can not be set when in 24/, "...and error is sane";
 }
 
@@ -22,6 +22,11 @@ my $mod = 'RPi::RTC::DS3231';
 
     my $o = $mod->new;
 
+    $o->clock_hours(12);
+    is eval {$o->am_pm('X'); 1; }, undef, "am_pm() croaks with invalid param";
+    like $@, qr/requires either 'AM' or 'PM'/, "...and error is sane";
+
+    $o->clock_hours(24);
     is $o->min(13), 13, "set 24-hr clock to 13th min ok";
     is $o->sec(13), 13, "set 24-hr clock to 13th sec ok";
 

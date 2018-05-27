@@ -84,6 +84,9 @@ sub am_pm {
     my ($self, $meridien) = @_;
 
     if (defined $meridien) {
+        if ($meridien ne 'AM' && $meridien ne 'PM'){
+            croak("am_pm() requires either 'AM' or 'PM' as a param\n");
+        }
         if ($meridien eq 'AM') {
             $meridien = 0;
         }
