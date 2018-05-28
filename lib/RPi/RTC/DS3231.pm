@@ -121,7 +121,7 @@ sub hms {
 
     return $hms;
 }
-sub datetime {
+sub dt {
     my ($self) = @_;
 
     my $y = getYear($self->_fd);
