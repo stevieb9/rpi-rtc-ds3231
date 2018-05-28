@@ -210,10 +210,12 @@ sub close {
 # internal methods
 
 sub _get_register {
+    # retrieve the contents of an entire 8-bit register
     my ($self, $reg) = @_;
     return getRegister($self->_fd, $reg);
 }
 sub _fd {
+    # initializes the I2C communications
     my ($self, $rtc_addr) = @_;
 
     if (! exists $self->{fd}){
@@ -222,6 +224,7 @@ sub _fd {
     return $self->{fd};
 }
 sub _stringify {
+    # left-pads with a zero any integer with only a single digit
     my ($int) = @_;
 
     if (! defined $int || $int !~ /\d+/){
@@ -284,11 +287,216 @@ RPi::RTC::DS3231 - Interface to the DS3231 Real-Time Clock IC over I2C
     my $f = $rtc->temp('f');
 
     # get a hash ready for use in DateTime->new()
+    # must have DateTime installed!
 
-    DateTime->new($rtc->dt_hash); # must have DateTime installed!
+    my $dt = DateTime->new($rtc->dt_hash);
 
 =head1 DESCRIPTION
 
+XS-based interface to the DS3231 Real-Time Clock Integrated Circuit.
+
+This distribution *should* work with the DS1307 modules as well, but I do not
+have one to test with.
+
+=head1 METHODS
+
+=head1 Operational Methods
+
+=head2 new([$i2c_addr])
+
+Instantiates and returns a new L<RPi::RTC::DS3231> object.
+
+Parameters:
+
+    $i2c_addr
+
+Optional, Integer: The I2C address of the RTC module. Defaults to C<0x68> for
+a DS3231 RTC unit.
+
+Return: An L<RPi::RTC::DS3231> object.
+
+=head2 close
+
+Closes the active I2C (C<ioctl>) file descriptor. Should be called at the end
+of your script.
+
+Takes no parameters, has no return.
+
+=head1 Individual time/date methods
+
+=head2 year([$year])
+
+Sets/gets the RTC year.
+
+Parameters:
+
+    $year
+
+Optional, Integer: A year between C<2000> and C<2099>. If set, we'll update the
+RTC.
+
+Return: Integer, the year currently stored in the RTC.
+
+=head2 month([$month])
+
+Sets/gets the RTC month.
+
+Parameters:
+
+    $month
+
+Optional, Integer: A month between C<1> and C<12>. If set, we'll update the RTC.
+
+Return: String/Integer, the month currently stored in the RTC, between C<1> and
+C<12>. Single digits will be left-padded with a zero within a string.
+
+=head2 mday([$mday])
+
+Sets/gets the RTC day of the month.
+
+Parameters:
+
+    $mday
+
+Optional, Integer: A day between C<1> and C<31>. If set, we'll update the RTC.
+
+Return: String/Integer, the day currently stored in the RTC, between C<1> and
+C<31>. Single digits will be left-padded with a zero within a string.
+
+=head2 day([$day])
+
+Sets/gets the RTC weekday.
+
+Parameters:
+
+    $day
+
+Optional, Integer: A weekday between C<1> and C<7> (correlates to C<Monday> to
+C<Sunday> respectively). If set, we'll update the RTC.
+
+Return: String, the weekday currently stored in the RTC, as C<Monday> to
+C<Sunday>.
+
+=head2 hour([$hour])
+
+Sets/gets the RTC hour.
+
+Parameters:
+
+    $hour
+
+Optional, Integer: An hour between C<0> and C<23>. If set, we'll update the RTC.
+
+Return: String/Integer, the hour currently stored in the RTC, between C<0> and
+C<23>. Single digits will be left-padded with a zero within a string.
+
+NOTE: If you're in 24-hour clock mode (L</clock_hours>), valid values are C<0>
+through C<23>. If in 12-hour clock mode, valid values are C<1> through C<12>.
+
+=head2 min([$min])
+
+Sets/gets the RTC minute.
+
+Parameters:
+
+    $min
+
+Optional, Integer: A minute between C<0> and C<59>. If set, we'll update the
+RTC.
+
+Return: String/Integer, the minute currently stored in the RTC, between C<0> and
+C<59>. Single digits will be left-padded with a zero within a string.
+
+=head2 sec([$sec])
+
+Sets/gets the RTC second.
+
+Parameters:
+
+    $sec
+
+Optional, Integer: A second between C<0> and C<59>. If set, we'll update the
+RTC.
+
+Return: String/Integer, the second currently stored in the RTC, between C<0> and
+C<59>. Single digits will be left-padded with a zero within a string.
+
+=head1 Auxillary date/time methods
+
+=head2 am_pm ([$meridien])
+
+Sets/gets the time meridien (AM/PM) when in 12-hour clock mode. This method will
+C<croak()> if called while in 24-hour clock format.
+
+Parameters:
+
+   $meridien
+
+Optional, String: Set by sending in either C<AM> for morning hours, or C<PM> for
+latter hours.
+
+Return: String: Returns either C<AM> or C<PM>.
+
+=head2 clock_hours([$format])
+
+Sets/gets the current clock format as either 12-hour or 24-hour format. By
+default, the RTC is set to 24-hour clock format.
+
+Parameters:
+
+    $format
+
+Optional, Integer: Send in C<24> for 24-hour (aka. Military) clock format, or
+C<12> for 12-hour clock format.
+
+Return: Integer: The current format as either C<24> or C<12>.
+
+=head2 hms
+
+Returns the current hours, minutes and seconds as a string in the following
+format:
+
+    'HH:MM:SS'
+
+If in 12-hour clock mode, we will append either C<AM> or C<PM> to the string as
+such:
+
+    'HH:MM:SS AM'
+
+=head2 date_time([$datetime])
+
+Sets gets the date/time in one single operation.
+
+Parameters:
+
+    $datetime
+
+Optional, String: The date and time you want to set the RTC to, in the format:
+
+    'YYYY-MM-DD HH:MM:SS'
+
+Note that the hours must reflect 24-hour clock format, so for example, if you
+want to set 11 PM, use C<23> for the hours field.
+
+Return: String: The date and time in the format C<YYYY-MM-DD HH:MM:SS>.
+
+=head2 dt_hash
+
+This is a convenience method that returns the date and time in hash format,
+ready to be used by L<DateTime>'s C<new()> method.
+
+Return: Hash: The format of the hash is as follows:
+
+      'minute' => 20,
+      'hour' => '02',
+      'year' => 2000,
+      'second' => '07',
+      'day' => 18,
+      'month' => '05'
+
+Example L<DateTime> usage:
+
+    my $dt = DateTime->new($rtc->dt_hash);
 
 =head1 AUTHOR
 

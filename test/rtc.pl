@@ -15,6 +15,9 @@ $rtc->year(2000);
 
 my $dt = DateTime->new($rtc->dt_hash);
 
+my %h = $rtc->dt_hash;
+
+print Dumper \%h;
 say $dt;
 
 my $datetime = $rtc->date_time;
