@@ -111,9 +111,9 @@ sub clock_hours {
 sub hms {
     my ($self) = @_;
 
-    my $h = stringify(getHour($self->_fd));
-    my $m = stringify(getMinutes($self->_fd));
-    my $s = stringify(getSeconds($self->_fd));
+    my $h = _stringify(getHour($self->_fd));
+    my $m = _stringify(getMinutes($self->_fd));
+    my $s = _stringify(getSeconds($self->_fd));
 
     my $hms = "$h:$m:$s";
 
@@ -121,28 +121,51 @@ sub hms {
 
     return $hms;
 }
-sub dt {
+sub date_time {
     my ($self) = @_;
 
     my $y = getYear($self->_fd);
-    my $mon = stringify(getMonth($self->_fd));
-    my $day = stringify(getDayOfMonth($self->_fd));
+    my $mon = _stringify(getMonth($self->_fd));
+    my $day = _stringify(getDayOfMonth($self->_fd));
 
     my $h;
 
     if ($self->clock_hours == 12){
         $self->clock_hours(24);
-        $h = stringify(getHour($self->_fd));
+        $h = _stringify(getHour($self->_fd));
         $self->clock_hours(12);
     }
     else {
-        $h = stringify(getHour($self->_fd));
+        $h = _stringify(getHour($self->_fd));
     }
 
-    my $m = stringify(getMinutes($self->_fd));
-    my $s = stringify(getSeconds($self->_fd));
+    my $m = _stringify(getMinutes($self->_fd));
+    my $s = _stringify(getSeconds($self->_fd));
 
     return "$y-$mon-$day $h:$m:$s";
+}
+sub dt_hash {
+    my ($self) = @_;
+
+    my %dt;
+
+    $dt{year} = getYear($self->_fd);
+    $dt{month} = _stringify(getMonth($self->_fd));
+    $dt{day} = _stringify(getDayOfMonth($self->_fd));
+
+    if ($self->clock_hours == 12){
+        $self->clock_hours(24);
+        $dt{hour} = _stringify(getHour($self->_fd));
+        $self->clock_hours(12);
+    }
+    else {
+        $dt{hour} = _stringify(getHour($self->_fd));
+    }
+
+    $dt{minute} = _stringify(getMinutes($self->_fd));
+    $dt{second} = _stringify(getSeconds($self->_fd));
+
+    return %dt;
 }
 
 # operation methods
@@ -150,15 +173,6 @@ sub dt {
 sub close {
     my ($self) = @_;
     _close($self->_fd);
-}
-sub stringify {
-    my ($int) = @_;
-
-    if (! defined $int || $int !~ /\d+/){
-        croak "as_string() requires an integer to check/convert to str\n";
-    }
-
-    return length($int) < 2 ? "0$int" : $int;
 }
 
 # internal methods
@@ -175,7 +189,15 @@ sub _fd {
     }
     return $self->{fd};
 }
+sub _stringify {
+    my ($int) = @_;
 
+    if (! defined $int || $int !~ /\d+/){
+        croak "as_string() requires an integer to check/convert to str\n";
+    }
+
+    return length($int) < 2 ? "0$int" : $int;
+}
 
 sub __vim {};
 
