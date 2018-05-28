@@ -4,6 +4,10 @@ use warnings;
 use RPi::RTC::DS3231;
 use Test::More;
 
+if (! $ENV{RPI_RTC}){
+    plan(skip_all => "Skipping: RPI_RTC environment variable not set");
+}
+
 my $mod = 'RPi::RTC::DS3231';
 
 { # bounds checking
