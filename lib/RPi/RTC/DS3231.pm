@@ -10,10 +10,15 @@ XSLoader::load('RPi::RTC::DS3231', $VERSION);
 
 use Carp qw(croak);
 
+use constant DS3231_ADDR => 0x68;
+
 sub new {
-    my ($class) = @_;
+    my ($class, $rtc_addr) = @_;
+
+    $rtc_addr = DS3231_ADDR if ! defined $rtc_addr;
+
     my $self = bless {}, $class;
-    $self->_fd;
+    $self->_fd($rtc_addr);
     return $self;
 }
 
@@ -122,8 +127,35 @@ sub hms {
     return $hms;
 }
 sub date_time {
-    my ($self) = @_;
+    my ($self, $datetime) = @_;
 
+    if (defined $datetime){
+        my @dt;
+
+        if (@dt =
+            $datetime =~ /(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/)
+        {
+            my $ch = $self->clock_hours;
+
+            $self->clock_hours(24) if $ch == 12;
+
+            $self->year($dt[0]);
+            $self->month($dt[1]);
+            $self->mday($dt[2]);
+
+            $self->hour($dt[3]);
+            $self->min($dt[4]);
+            $self->sec($dt[5]);
+
+            $self->clock_hours(12) if $ch == 12;
+        }
+        else {
+            croak(
+                "datetime parameter must be in the format " .
+                "'yyyy-mm-dd hh:mm:ss'. You supplied '$datetime'\n"
+            );
+        }
+    }
     my $y = getYear($self->_fd);
     my $mon = _stringify(getMonth($self->_fd));
     my $day = _stringify(getDayOfMonth($self->_fd));
@@ -182,10 +214,10 @@ sub _get_register {
     return getRegister($self->_fd, $reg);
 }
 sub _fd {
-    my ($self) = @_;
+    my ($self, $rtc_addr) = @_;
 
     if (! exists $self->{fd}){
-        $self->{fd} = getFh();
+        $self->{fd} = getFh($rtc_addr);
     }
     return $self->{fd};
 }
@@ -209,6 +241,54 @@ __END__
 RPi::RTC::DS3231 - Interface to the DS3231 Real-Time Clock IC over I2C
 
 =head1 SYNOPSIS
+
+    use RPi::RTC::DS3231;
+
+    my $rtc = RPi::RTC::DS3231->new;
+
+    # set individual
+
+    $rtc->month(12);
+    $rtc->hour(3);
+    $rt->sec(33);
+    # ...etc
+
+    # set date/time in one swoop
+
+    $rtc->date_time('2018-05-28 23:15:17');
+
+    # get individual
+
+    my $h = $rtc->hour;
+    my $d = $rtc->mday;
+    # ...etc
+
+    # get date/time as a string in one swoop
+
+    my $datetime = $rtc->date_time; # "yyyy-mm-dd hh:mm:ss"
+
+    # get/set 24 or 12 hour clock
+
+    my $ch = $rtc->clock_hours;
+    $rtc->clock_hours(24); # or 12
+
+    # get/set AM/PM
+
+    my $meridien = $rtc->am_pm;
+
+    $rtc->am_pm('AM'); # or 'PM' # only available in 24 hr clock mode
+
+    # get temperature
+
+    my $c = $rtc->temp;
+    my $f = $rtc->temp('f');
+
+    # get a hash ready for use in DateTime->new()
+
+    DateTime->new($rtc->dt_hash); # must have DateTime installed!
+
+=head1 DESCRIPTION
+
 
 =head1 AUTHOR
 

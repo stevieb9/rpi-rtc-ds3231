@@ -14,8 +14,6 @@
 #include "rtc.h"
 #include "bit.h"
 
-#define RTC_ADDR    0x68
-
 /* top-level register */
 
 #define RTC_REG_DT  0x00
@@ -266,7 +264,7 @@ void setMilitary (int fd, int value){
     }
 }
 
-int getFh (){
+int getFh (int rtcAddr){
 
     int fd;
 
@@ -275,11 +273,11 @@ int getFh (){
         croak("Couldn't open the device: %s\n", strerror(errno));
 	}
 
-	if (ioctl(fd, I2C_SLAVE_FORCE, RTC_ADDR) < 0) {
+	if (ioctl(fd, I2C_SLAVE_FORCE, rtcAddr) < 0) {
         close(fd);
         croak(
             "Couldn't find device at addr %d: %s\n",
-            RTC_ADDR,
+            rtcAddr,
             strerror(errno)
         );
 	}
@@ -480,7 +478,8 @@ float getTemp (fd)
     int fd
 
 int
-getFh ()
+getFh (rtcAddr)
+    int rtcAddr
 
 void
 disableRegisterBit (fd, reg, bit)

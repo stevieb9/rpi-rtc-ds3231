@@ -16,3 +16,13 @@ $rtc->year(2000);
 my $dt = DateTime->new($rtc->dt_hash);
 
 say $dt;
+
+my $datetime = $rtc->date_time;
+
+my @dt;
+
+if (@dt = $datetime =~ /(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/){
+    print "$_\n" for @dt ;
+}
+
+say $rtc->date_time($datetime);
