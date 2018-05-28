@@ -279,7 +279,7 @@ RPi::RTC::DS3231 - Interface to the DS3231 Real-Time Clock IC over I2C
 
     my $meridien = $rtc->am_pm;
 
-    $rtc->am_pm('AM'); # or 'PM' # only available in 24 hr clock mode
+    $rtc->am_pm('AM'); # or 'PM' # only available in 12 hr clock mode
 
     # get temperature
 
