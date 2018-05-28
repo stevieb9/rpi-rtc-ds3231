@@ -3,7 +3,7 @@ package RPi::RTC::DS3231;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 require XSLoader;
 XSLoader::load('RPi::RTC::DS3231', $VERSION);
@@ -293,7 +293,9 @@ RPi::RTC::DS3231 - Interface to the DS3231 Real-Time Clock IC over I2C
 
 =head1 DESCRIPTION
 
-XS-based interface to the DS3231 Real-Time Clock Integrated Circuit.
+XS-based interface to the DS3231 Real-Time Clock Integrated Circuit over I2C.
+Although packaged under the C<RPi::> umbrella, the distribution will work on
+any Linux system with I2C installed and operable.
 
 This distribution *should* work with the DS1307 modules as well, but I do not
 have one to test with.
