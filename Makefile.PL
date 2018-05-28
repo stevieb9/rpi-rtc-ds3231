@@ -1,4 +1,3 @@
-use 5.006;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
@@ -12,7 +11,20 @@ WriteMakefile(
     PL_FILES         => {},
     INC              => '-I.',
     OBJECT           => '$(O_FILES)', # include the extra *.c files (bit.c)
-    MIN_PERL_VERSION => '5.006',
+    MIN_PERL_VERSION => '5.010',
+    META_MERGE => {
+        'meta-spec' => { version => 2 },
+        resources   => {
+            bugtracker => {
+                web => 'https://github.com/stevieb9/rpi-rtc-ds3231/issues',
+            },
+            repository => {
+                type => 'git',
+                url => 'https://github.com/stevieb9/rpi-rtc-ds3231.git',
+                web => 'https://github.com/stevieb9/rpi-rtc-ds3231',
+            },
+        },
+    },
     CONFIGURE_REQUIRES => {
         'ExtUtils::MakeMaker' => '0',
     },
