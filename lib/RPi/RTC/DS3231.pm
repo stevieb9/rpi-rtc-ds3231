@@ -498,6 +498,14 @@ Example L<DateTime> usage:
 
     my $dt = DateTime->new($rtc->dt_hash);
 
+=head1 Miscellaneous methods
+
+=head2 temp([$degrees])
+
+The DS3231 has a built-in thermometer which you can leverage to get the current
+temperature. By default, we return the temperature in celcius. Send in C<'f'>
+to get the temperature in farenheit instead.
+
 =head1 AUTHOR
 
 Steve Bertrand, C<< <steveb at cpan.org> >>

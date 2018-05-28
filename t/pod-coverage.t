@@ -1,5 +1,3 @@
-#!perl -T
-use 5.006;
 use strict;
 use warnings;
 use Test::More;
@@ -21,4 +19,17 @@ eval "use Pod::Coverage $min_pc";
 plan skip_all => "Pod::Coverage $min_pc required for testing POD coverage"
     if $@;
 
-all_pod_coverage_ok();
+#all_pod_coverage_ok();
+
+pod_coverage_ok(
+    'RPi::RTC::DS3231',
+    {
+        also_private => [
+            qr/\p{Lowercase}+\p{Uppercase}\p{Lowercase}+/, # camelCase (XS)
+            qr/(?:bcd2dec|dec2bcd)/
+        ],
+    },
+    "Test Perl subs, skip XS/C functions"
+);
+
+done_testing;

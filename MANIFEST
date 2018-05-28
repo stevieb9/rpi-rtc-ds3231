@@ -21,7 +21,6 @@ t/45-year.t
 t/50-temp.t
 t/55-hms.t
 t/60-date_time.t
-t/60-datetime.t
 t/65-dt_hash.t
 t/70-date_time_set.t
 t/manifest.t
