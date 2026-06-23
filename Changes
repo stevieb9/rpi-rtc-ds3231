@@ -1,7 +1,21 @@
 Revision history for RPi-RTC-DS3231
 
 0.02 UNREL
-        -
+        - Fixed setMonth() to store the month in BCD (was raw binary); months
+          10, 11 and 12 were written as illegal BCD (0x0A-0x0C) and corrupted
+          the calendar/rollover on the chip
+        - Fixed setHour() 12-hour mode to store the hour in BCD (same raw-binary
+          bug as setMonth())
+        - Fixed getTemp() to sign-extend the temperature MSB so sub-zero
+          temperatures decode correctly
+        - Routed all BCD time/date register I/O through new setBcdField() /
+          getBcdField() helpers, with masks per the DS3231 datasheet, so the
+          raw-vs-BCD encoding can no longer diverge
+        - Added a simple BCD codec sanity check (t/01-bcd-encoding.t) and
+          worst-case raw-register guards in t/40-month.t / t/15-hour.t that fail
+          on the old raw write and pass on the BCD write; tightened t/50-temp.t
+          to assert the DS3231 operating range. The comprehensive, exhaustive
+          proof lives in the rpi-wiringpi test platform
 
 0.01 2018-05-28
         - initial release
