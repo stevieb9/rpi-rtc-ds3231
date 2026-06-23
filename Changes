@@ -1,6 +1,6 @@
 Revision history for RPi-RTC-DS3231
 
-0.03 UNREL
+0.03    2026-06-22
     - Fixed temp() to normalize its return value to two decimal places in both
       scales; the Fahrenheit conversion could yield a single decimal (e.g.
       71.6) and a 0.25-deg Celsius reading (e.g. 22.5) had the same issue
