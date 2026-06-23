@@ -27,7 +27,11 @@ sub new {
 sub temp {
     my ($self, $output) = @_;
     my $celcius =  getTemp($self->_fd);
-    return defined $output && $output eq 'f' ? $celcius * 9/5 + 32 : $celcius;
+    my $temp = defined $output && $output eq 'f' ? $celcius * 9/5 + 32 : $celcius;
+
+    # Normalize to two decimal places so the return value is consistent
+    # regardless of scale (Fahrenheit conversion can yield a single decimal).
+    return sprintf "%.2f", $temp;
 }
 
 # time/date methods
