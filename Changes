@@ -1,5 +1,8 @@
 Revision history for RPi-RTC-DS3231
 
+0.03 UNREL
+    -
+
 0.02    2026-06-22
         - Fixed setMonth() to store the month in BCD (was raw binary); months
           10, 11 and 12 were written as illegal BCD (0x0A-0x0C) and corrupted
