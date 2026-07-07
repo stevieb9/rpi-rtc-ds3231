@@ -1,7 +1,21 @@
 Revision history for RPi-RTC-DS3231
 
 0.04 UNREL
-    -
+    - Added TECHNICAL INFORMATION POD (DEVICE SPECIFICS, REGISTER MAP, ON THE
+      WIRE, DATASHEET): chip capabilities, Pi wiring, the 0x00-0x12 register
+      map, and the exact I2C frames the XS layer produces, verified against
+      the DS3231 datasheet (19-5170 Rev 10)
+    - Fixed pre-existing POD nits: hour()'s unresolved clock_hours link, and
+      an empty METHODS head1 that podchecker warned on
+    - Fixed more POD typos: SYNOPSIS called $rt->sec (should be $rtc->sec),
+      temp() misspelled Celsius and Fahrenheit, and the "Auxillary date/time
+      methods" heading (plus the matching code comment) misspelled Auxiliary
+    - Bundled the datasheet as docs/datasheet/DS3231.pdf and repointed the
+      DATASHEET POD section at it instead of the Adafruit-hosted URL
+    - Renamed the misspelled $celcius local in temp() to $celsius (cosmetic;
+      no API or behaviour change)
+    - Removed a stale .claude/settings.local.json entry from MANIFEST (the
+      file is untracked and not part of the distribution)
 
 0.03    2026-06-22
     - Fixed temp() to normalize its return value to two decimal places in both

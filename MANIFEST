@@ -1,7 +1,7 @@
-.claude/settings.local.json
 bit.c
 bit.h
 Changes
+docs/datasheet/DS3231.pdf
 DS3231.xs
 lib/RPi/RTC/DS3231.pm
 Makefile.PL
