@@ -582,3 +582,70 @@ _establishI2C (fd)
 void
 _close (fd)
     int fd
+
+SV*
+_read_time_burst (fd)
+    int fd
+    CODE:
+        {
+            /* Burst-read the seven time/date registers (0x00-0x06) in one
+               transaction. Per the DS3231 datasheet, the I2C START transfers
+               the running time into a secondary buffer that the burst then
+               reads, so the snapshot is coherent even if the clock ticks
+               mid-read - no torn boundary reads. */
+
+            unsigned char reg = RTC_REG_DT;
+            unsigned char buf[7];
+
+            if (write(fd, &reg, 1) != 1){
+                close(fd);
+                croak(
+                    "Could not set the burst-read pointer: %s\n",
+                    strerror(errno)
+                );
+            }
+
+            if (read(fd, buf, 7) != 7){
+                close(fd);
+                croak(
+                    "Could not burst-read the time registers: %s\n",
+                    strerror(errno)
+                );
+            }
+
+            RETVAL = newSVpvn((char*)buf, 7);
+        }
+    OUTPUT:
+        RETVAL
+
+void
+_write_time_burst (fd, data)
+    int fd
+    SV* data
+    CODE:
+        {
+            /* Burst-write the seven time/date registers (0x00-0x06) in one
+               transaction, seconds first. Per the datasheet, writing the
+               seconds register resets the countdown chain and the remaining
+               registers must follow within 1s; a single burst keeps the whole
+               set atomic and well inside that window. */
+
+            STRLEN len;
+            unsigned char* src = (unsigned char*)SvPV(data, len);
+            unsigned char buf[8];
+
+            if (len != 7){
+                croak("_write_time_burst() requires exactly 7 data bytes\n");
+            }
+
+            buf[0] = RTC_REG_DT;
+            memcpy(buf + 1, src, 7);
+
+            if (write(fd, buf, 8) != 8){
+                close(fd);
+                croak(
+                    "Could not burst-write the time registers: %s\n",
+                    strerror(errno)
+                );
+            }
+        }

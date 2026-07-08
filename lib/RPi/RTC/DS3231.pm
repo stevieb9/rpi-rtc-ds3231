@@ -120,13 +120,18 @@ sub clock_hours {
 sub hms {
     my ($self) = @_;
 
-    my $h = _stringify(getHour($self->_fd));
-    my $m = _stringify(getMinutes($self->_fd));
-    my $s = _stringify(getSeconds($self->_fd));
+    # One coherent burst-read snapshot (see _read_time) instead of three
+    # separate point-then-read transactions that a tick could tear.
+    my $t = $self->_read_time;
 
-    my $hms = "$h:$m:$s";
+    my $hms = sprintf(
+        "%s:%s:%s",
+        _stringify($t->{hour_native}),
+        _stringify($t->{min}),
+        _stringify($t->{sec}),
+    );
 
-    $hms = "$hms " . $self->am_pm if $self->clock_hours == 12;
+    $hms .= $t->{twelve} ? ($t->{pm} ? ' PM' : ' AM') : '';
 
     return $hms;
 }
@@ -134,24 +139,10 @@ sub date_time {
     my ($self, $datetime) = @_;
 
     if (defined $datetime){
-        my @dt;
-
-        if (@dt =
+        if (my @dt =
             $datetime =~ /(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/)
         {
-            my $ch = $self->clock_hours;
-
-            $self->clock_hours(24) if $ch == 12;
-
-            $self->year($dt[0]);
-            $self->month($dt[1]);
-            $self->mday($dt[2]);
-
-            $self->hour($dt[3]);
-            $self->min($dt[4]);
-            $self->sec($dt[5]);
-
-            $self->clock_hours(12) if $ch == 12;
+            $self->_write_time(@dt);
         }
         else {
             croak(
@@ -160,48 +151,34 @@ sub date_time {
             );
         }
     }
-    my $y = getYear($self->_fd);
-    my $mon = _stringify(getMonth($self->_fd));
-    my $day = _stringify(getDayOfMonth($self->_fd));
 
-    my $h;
+    my $t = $self->_read_time;
 
-    if ($self->clock_hours == 12){
-        $self->clock_hours(24);
-        $h = _stringify(getHour($self->_fd));
-        $self->clock_hours(12);
-    }
-    else {
-        $h = _stringify(getHour($self->_fd));
-    }
-
-    my $m = _stringify(getMinutes($self->_fd));
-    my $s = _stringify(getSeconds($self->_fd));
-
-    return "$y-$mon-$day $h:$m:$s";
+    # The string form always reports the hour in 24-hour format, regardless of
+    # the chip's clock mode (preserving the previous behaviour).
+    return sprintf(
+        "%d-%s-%s %s:%s:%s",
+        $t->{year},
+        _stringify($t->{month}),
+        _stringify($t->{mday}),
+        _stringify($t->{hour24}),
+        _stringify($t->{min}),
+        _stringify($t->{sec}),
+    );
 }
 sub dt_hash {
     my ($self) = @_;
 
-    my %dt;
+    my $t = $self->_read_time;
 
-    $dt{year} = getYear($self->_fd);
-    $dt{month} = _stringify(getMonth($self->_fd));
-    $dt{day} = _stringify(getDayOfMonth($self->_fd));
-
-    if ($self->clock_hours == 12){
-        $self->clock_hours(24);
-        $dt{hour} = _stringify(getHour($self->_fd));
-        $self->clock_hours(12);
-    }
-    else {
-        $dt{hour} = _stringify(getHour($self->_fd));
-    }
-
-    $dt{minute} = _stringify(getMinutes($self->_fd));
-    $dt{second} = _stringify(getSeconds($self->_fd));
-
-    return %dt;
+    return (
+        year   => $t->{year},
+        month  => _stringify($t->{month}),
+        day    => _stringify($t->{mday}),
+        hour   => _stringify($t->{hour24}),
+        minute => _stringify($t->{min}),
+        second => _stringify($t->{sec}),
+    );
 }
 
 # operation methods
@@ -227,6 +204,42 @@ sub _fd {
     }
     return $self->{fd};
 }
+sub _read_time {
+    # Decode one coherent burst-read snapshot of registers 0x00-0x06 into a
+    # field hashref. Replaces the per-field point-then-read transactions (which
+    # a tick between them could tear) and the old chip-mutating clock_hours()
+    # toggle that was used to read the hour in 24-hour form.
+    my ($self) = @_;
+
+    my @b = unpack 'C7', _read_time_burst($self->_fd);
+
+    my %t = (
+        sec   => bcd2dec($b[0] & 0x7F),
+        min   => bcd2dec($b[1] & 0x7F),
+        mday  => bcd2dec($b[4] & 0x3F),
+        month => bcd2dec($b[5] & 0x1F),
+        year  => bcd2dec($b[6] & 0xFF) + 2000,
+    );
+
+    if ($b[2] & 0x40){
+        # 12-hour mode: bit 6 set, bit 5 = PM, bits 4-0 = BCD hour (1-12)
+        $t{twelve}      = 1;
+        $t{pm}          = ($b[2] & 0x20) ? 1 : 0;
+        $t{hour_native} = bcd2dec($b[2] & 0x1F);
+        $t{hour24}      = $t{pm}
+            ? ($t{hour_native} == 12 ? 12 : $t{hour_native} + 12)
+            : ($t{hour_native} == 12 ?  0 : $t{hour_native});
+    }
+    else {
+        # 24-hour mode: bits 5-0 = BCD hour (0-23)
+        $t{twelve}      = 0;
+        $t{pm}          = 0;
+        $t{hour_native} = bcd2dec($b[2] & 0x3F);
+        $t{hour24}      = $t{hour_native};
+    }
+
+    return \%t;
+}
 sub _stringify {
     # left-pads with a zero any integer with only a single digit
     my ($int) = @_;
@@ -236,6 +249,61 @@ sub _stringify {
     }
 
     return length($int) < 2 ? "0$int" : $int;
+}
+sub _write_time {
+    # Atomically set the seven time/date registers from a parsed datetime
+    # (year, month, mday, 24-hour hour, min, sec) in a single burst write,
+    # seconds first (see _write_time_burst). Preserves the current
+    # day-of-week, clock-mode and century bits.
+    my ($self, $year, $month, $mday, $hour, $min, $sec) = @_;
+
+    if ($year < 2000 || $year > 2099){
+        croak "Year ($year) out of range. Must be between 2000-2099\n";
+    }
+    if ($month < 1 || $month > 12){
+        croak "Month ($month) out of range. Must be between 1-12\n";
+    }
+    if ($mday < 1 || $mday > 31){
+        croak "Month day ($mday) out of range. Must be between 1-31\n";
+    }
+    if ($hour < 0 || $hour > 23){
+        croak "Hour ($hour) out of range. Must be between 0-23\n";
+    }
+    if ($min < 0 || $min > 59){
+        croak "Minutes ($min) out of range. Must be between 0-59\n";
+    }
+    if ($sec < 0 || $sec > 59){
+        croak "Seconds ($sec) out of range. Must be between 0-59\n";
+    }
+
+    # Read the current registers to preserve day-of-week (0x03), the 12/24
+    # mode bit and the century bit that share the hour/month registers.
+    my @b = unpack 'C7', _read_time_burst($self->_fd);
+
+    my $hour_byte;
+
+    if ($b[2] & 0x40){
+        # Chip is in 12-hour mode: bit 6 (12/24) + bit 5 (PM) + BCD hour 1-12
+        my $pm = $hour >= 12 ? 1 : 0;
+        my $h12 = $hour % 12;
+        $h12 = 12 if $h12 == 0;
+        $hour_byte = 0x40 | ($pm ? 0x20 : 0) | dec2bcd($h12);
+    }
+    else {
+        $hour_byte = dec2bcd($hour);
+    }
+
+    my @out = (
+        dec2bcd($sec),                    # 0x00 seconds (written first)
+        dec2bcd($min),                    # 0x01 minutes
+        $hour_byte,                       # 0x02 hours (clock mode preserved)
+        $b[3],                            # 0x03 day-of-week (preserved)
+        dec2bcd($mday),                   # 0x04 date
+        ($b[5] & 0x80) | dec2bcd($month), # 0x05 month (century bit preserved)
+        dec2bcd($year - 2000),            # 0x06 year
+    );
+
+    _write_time_burst($self->_fd, pack('C7', @out));
 }
 
 sub __vim {};
@@ -668,13 +736,29 @@ then 0x12:
 
     22 + 0.50 = 22.50C
 
-One caveat: on every START the chip latches a coherent snapshot of the
-time registers into secondary buffers, which makes a multi-byte burst
-read atomic - but this module reads one register per transaction, so
-composed results (C<hms()>, C<date_time()>, C<dt_hash()>) are stitched
-together from several snapshots. A tick landing between two of those
-transactions can skew a boundary read (minutes read at :59, seconds
-read after the rollover, say).
+Composed reads take one atomic burst. On every START the chip latches a
+coherent snapshot of the time registers into secondary buffers, so a
+single multi-byte read from 0x00 can never tear across a tick. C<hms()>,
+C<date_time()> and C<dt_hash()> each take exactly one such burst of the
+seven time registers (0x00-0x06) - point once, then read seven bytes as
+the pointer auto-increments:
+
+    +---+------+---+------+---+---+          Point at seconds (0x00)
+    | S | 0xD0 | A | 0x00 | A | P |
+    +---+------+---+------+---+---+
+
+    +---+------+---+----+-- --+----+---+---+
+    | S | 0xD1 | A | ss | ... | yy | N | P |    Seven bytes, one snapshot
+    +---+------+---+----+-- --+----+---+---+    (sec 0x00 .. year 0x06)
+         addr+R
+
+The individual accessors (C<min()>, C<hour()>, ...) still use the
+one-register point-then-read pairs shown above. Setting the whole clock
+with C<< date_time('yyyy-mm-dd hh:mm:ss') >> is likewise a single burst
+write from 0x00, seconds first: the seconds write resets the countdown
+chain and the datasheet requires the remaining registers within one
+second, which one transaction satisfies with ease (day-of-week, the
+12/24 mode and the century bit are preserved from a prior read).
 
 =head2 DATASHEET
 

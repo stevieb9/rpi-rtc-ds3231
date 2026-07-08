@@ -16,6 +16,16 @@ Revision history for RPi-RTC-DS3231
       no API or behaviour change)
     - Removed a stale .claude/settings.local.json entry from MANIFEST (the
       file is untracked and not part of the distribution)
+    - Made composed time reads/writes atomic on the bus (XS): hms(),
+      date_time() and dt_hash() now take a single coherent burst-read of
+      registers 0x00-0x06 (the chip snapshots them into secondary buffers on
+      START) instead of stitching several per-register reads a tick could
+      tear; date_time('...') now sets the clock with one burst write, seconds
+      first (the seconds write resets the countdown chain and the datasheet
+      requires the remaining registers within 1s). Added _read_time_burst /
+      _write_time_burst XS helpers; day-of-week, 12/24 mode and century bits
+      are preserved, and the chip-mutating clock_hours() toggle previously
+      used to read the 24-hour value is gone. ON THE WIRE POD updated.
 
 0.03    2026-06-22
     - Fixed temp() to normalize its return value to two decimal places in both
