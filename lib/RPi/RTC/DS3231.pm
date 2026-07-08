@@ -369,8 +369,31 @@ XS-based interface to the DS3231 Real-Time Clock Integrated Circuit over I2C.
 Although packaged under the C<RPi::> umbrella, the distribution will work on
 any Linux system with I2C installed and operable.
 
-This distribution *should* work with the DS1307 modules as well, but I do not
-have one to test with.
+The core timekeeping should also work on a DS1307 (untested): it shares the
+DS3231's I2C address (0x68), the 0x00-0x06 BCD time/date register map, and the
+hour register's 12/24-hour and AM/PM bit layout, so the date/time getters and
+setters, L</hms>, and the individual field accessors carry over. Three DS1307
+differences are worth knowing, though:
+
+=over 4
+
+=item * B<C<temp> does not work.> The DS1307 has no temperature sensor;
+registers 0x11-0x12 are general-purpose NV RAM on it (its RAM spans 0x08-0x3F),
+so C<temp> would just decode whatever bytes happen to be stored there.
+
+=item * B<The clock-halt bit is hidden.> Bit 7 of the DS1307 seconds register
+is the CH (clock halt) bit - when set, the oscillator is stopped. This module
+masks that bit off on reads and clears it on every seconds write, so on a
+DS1307 it silently starts a halted clock and never reports the halted state.
+The DS3231 has no such bit (its seconds bit 7 always reads 0).
+
+=item * B<Burst reads are not snapshot-atomic.> The coherent burst read behind
+L</hms>, L<date_time|/"date_time([$datetime])"> and L</dt_hash> relies on the
+DS3231 latching a snapshot
+into secondary buffers on every I2C START. The DS1307 has no such buffer, so on
+one the burst still auto-increments but a tick landing mid-read can tear it.
+
+=back
 
 =head1 Operational Methods
 

@@ -26,6 +26,14 @@ Revision history for RPi-RTC-DS3231
       _write_time_burst XS helpers; day-of-week, 12/24 mode and century bits
       are preserved, and the chip-mutating clock_hours() toggle previously
       used to read the 24-hour value is gone. ON THE WIRE POD updated.
+    - Corrected the DS1307 compatibility claim in DESCRIPTION. Verified
+      against the DS1307 datasheet: basic timekeeping carries over (same 0x68
+      address, 0x00-0x06 BCD register map, 12/24 + AM/PM hour layout), but
+      documented three real differences - temp() is invalid (0x11-0x12 are NV
+      RAM on a DS1307, which has no temperature sensor); the seconds bit-7 CH
+      (clock-halt) bit is masked on read and cleared on write, so a halted
+      DS1307 clock is hidden and silently restarted; and the burst reads are
+      not snapshot-atomic on a DS1307 (it lacks the DS3231's secondary buffer)
 
 0.03    2026-06-22
     - Fixed temp() to normalize its return value to two decimal places in both
