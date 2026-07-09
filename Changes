@@ -38,6 +38,13 @@ Revision history for RPi-RTC-DS3231
       RPi::Const::BuildCheck::i2c_build_check() (via CONFIGURE_REQUIRES), so a
       missing I2C development header now exits NA rather than FAIL on CPAN
       testers; this XS dist previously had no such guard
+    - Added t/75-validation.t: HW-free coverage of _write_time()'s field-range
+      croaks (year/month/mday/hour/min/sec, all validated before the fd is
+      touched, so a bare-blessed object exercises them with no chip), the
+      date_time() format croak, and the am_pm()/clock_hours() bad-argument
+      croaks; plus temp()/temp('f') sign, two-decimal format and Fahrenheit
+      conversion over known Celsius values including the negative path (getTemp
+      stubbed) - the room-temperature-gated t/50-temp.t cannot reach sub-zero
 
 0.03    2026-06-22
     - Fixed temp() to normalize its return value to two decimal places in both
