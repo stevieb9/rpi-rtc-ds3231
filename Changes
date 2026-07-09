@@ -34,6 +34,10 @@ Revision history for RPi-RTC-DS3231
       (clock-halt) bit is masked on read and cleared on write, so a halted
       DS1307 clock is hidden and silently restarted; and the burst reads are
       not snapshot-atomic on a DS1307 (it lacks the DS3231's secondary buffer)
+    - Added a Makefile.PL build guard: the family-canonical
+      RPi::Const::BuildCheck::i2c_build_check() (via CONFIGURE_REQUIRES), so a
+      missing I2C development header now exits NA rather than FAIL on CPAN
+      testers; this XS dist previously had no such guard
 
 0.03    2026-06-22
     - Fixed temp() to normalize its return value to two decimal places in both
