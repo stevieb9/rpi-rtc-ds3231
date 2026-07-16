@@ -26,6 +26,7 @@ t/60-date_time.t
 t/65-dt_hash.t
 t/70-date_time_set.t
 t/75-validation.t
+t/80-power.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t

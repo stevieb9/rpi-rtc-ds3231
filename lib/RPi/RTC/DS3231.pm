@@ -12,6 +12,13 @@ use Carp qw(croak);
 
 use constant DS3231_ADDR => 0x68;
 
+use constant {
+    RTC_CONTROL => 0x0E,   # Control register
+    RTC_STATUS  => 0x0F,   # Control/status register
+    EOSC_BIT    => 7,      # Control: Enable Oscillator (active-low; 1 = stop on VBAT)
+    EN32KHZ_BIT => 3,      # Status: 32kHz output enable
+};
+
 sub new {
     my ($class, $rtc_addr) = @_;
 
@@ -179,6 +186,52 @@ sub dt_hash {
         minute => _stringify($t->{min}),
         second => _stringify($t->{sec}),
     );
+}
+
+# power / battery methods
+
+sub en_32khz {
+    my ($self, $bool) = @_;
+
+    # The 32.768kHz square-wave output on the 32K pin (Status reg bit 3). On by
+    # default; disabling it saves the output's current draw. Harmless to leave
+    # off - it's an auxiliary clock output, unrelated to timekeeping
+
+    if (defined $bool){
+        if ($bool){
+            enableRegisterBit($self->_fd, RTC_STATUS, EN32KHZ_BIT);
+        }
+        else {
+            disableRegisterBit($self->_fd, RTC_STATUS, EN32KHZ_BIT);
+        }
+    }
+
+    return getRegisterBit($self->_fd, RTC_STATUS, EN32KHZ_BIT);
+}
+sub osc_on_battery {
+    my ($self, $bool) = @_;
+
+    # Whether the oscillator keeps running - and time keeps advancing - while
+    # the chip is on its backup battery. Backed by the EOSC bit (Control reg
+    # bit 7), which is ACTIVE-LOW, so we expose the positive sense: true keeps
+    # timekeeping alive on VBAT (EOSC=0, the power-on default), false stops the
+    # oscillator on battery to conserve the cell.
+    #
+    # WARNING: osc_on_battery(0) means the clock FREEZES whenever VCC is lost -
+    # the time will not advance through a power outage, and OSF (Status bit 7)
+    # flags the time as invalid on return. Only for long-term storage where
+    # you'll re-set the time on the next power-up
+
+    if (defined $bool){
+        if ($bool){
+            disableRegisterBit($self->_fd, RTC_CONTROL, EOSC_BIT);
+        }
+        else {
+            enableRegisterBit($self->_fd, RTC_CONTROL, EOSC_BIT);
+        }
+    }
+
+    return getRegisterBit($self->_fd, RTC_CONTROL, EOSC_BIT) ? 0 : 1;
 }
 
 # operation methods
@@ -362,6 +415,14 @@ RPi::RTC::DS3231 - Interface to the DS3231 Real-Time Clock IC over I2C
     # must have DateTime installed!
 
     my $dt = DateTime->new($rtc->dt_hash);
+
+    # Battery / power
+
+    $rtc->en_32khz(0);        # silence the 32kHz output pin to save its draw
+
+    $rtc->osc_on_battery(0);  # stop the clock on battery to save the cell
+                              # WARNING: the clock then FREEZES on power loss;
+                              # only for storage - re-set the time on power-up
 
 =head1 DESCRIPTION
 
@@ -601,6 +662,52 @@ Example L<DateTime> usage:
 The DS3231 has a built-in thermometer which you can leverage to get the current
 temperature. By default, we return the temperature in Celsius. Send in C<'f'>
 to get the temperature in Fahrenheit instead.
+
+=head1 Power / battery methods
+
+=head2 en_32khz([$bool])
+
+Enables or disables the 32.768 kHz square-wave output on the C<32K> pin
+(C<EN32kHz>, Status register bit 3). The output is on by default; disabling it
+(C<< en_32khz(0) >>) removes its current draw. This is an auxiliary clock
+output only - toggling it has no effect on timekeeping, so it is safe to leave
+off if nothing uses the C<32K> pin.
+
+Parameters:
+
+    $bool
+
+Optional, Bool: C<1> enables the output, C<0> disables it. Omit to just read
+the current state.
+
+Return: The current state, C<1> (enabled) or C<0> (disabled).
+
+=head2 osc_on_battery([$bool])
+
+Gets or sets whether the oscillator - and therefore timekeeping - keeps running
+while the chip is on its backup battery. This is the C<EOSC> bit (Control
+register bit 7), exposed in its I<positive> sense: the raw bit is active-low, so
+this method inverts it for you.
+
+    $rtc->osc_on_battery(1);   # keep the clock running on battery (default)
+    $rtc->osc_on_battery(0);   # stop the oscillator on battery to save the cell
+
+B<WARNING>: C<< osc_on_battery(0) >> makes the clock B<freeze> whenever main
+power (VCC) is lost. The time will B<not> advance through a power outage, and
+the chip sets its Oscillator Stop Flag (C<OSF>, Status bit 7) to mark the
+timekeeping as invalid on the next power-up. On VCC the oscillator always runs
+regardless of this bit - it only takes effect on battery. Only set it to false
+for long-term storage where you will re-set the time (or re-sync from NTP) on
+the next power-up; otherwise it defeats the point of a battery-backed RTC.
+
+Parameters:
+
+    $bool
+
+Optional, Bool: C<1> keeps timekeeping alive on battery (the power-on default),
+C<0> stops the oscillator on battery. Omit to just read the current state.
+
+Return: The current state, C<1> (runs on battery) or C<0> (stops on battery).
 
 =head1 TECHNICAL INFORMATION
 
